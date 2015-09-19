@@ -1,1 +1,11 @@
 execute print with ("Test");
+int as x define 1;
+int as y define 10;
+string as imagefilename define "player_test.png";
+string as scriptfilename define "data/npc/Ukemi_test.script";
+GET put_npc WITH (x; y; imagefilename; scriptfilename) AS npc;
+execute process_npc with (npc);
+destroy x;
+destroy y;
+destroy imagefilename;
+destroy scriptfilename;

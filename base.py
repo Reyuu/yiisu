@@ -138,12 +138,18 @@ class Tile():
 class Playfield():
     def __init__(self, w, h, tileset):
         self.mapp = []
+        self.npcmapp = []
         self.tileset = Tileset(tileset)
         for y in xrange(h):
             wline = []
             for x in xrange(w):
                 wline += [Tile()]
             self.mapp += [wline]
+        for y in xrange(h):
+            wline = []
+            for x in xrange(w):
+                wline += [None]
+            self.npcmapp += [wline]
         #pprint(self.mapp)
         self.maxx = w
         self.maxy = h
@@ -160,10 +166,10 @@ class Playfield():
 
 
 class Player_c:
-    def __init__(self, x, y, image, displaysurf):
-        self.x = x
-        self.y = y
-        self.image = image[0] # load_png("image.png") in init field required
+    def __init__(self, x, y, imagefilename, displaysurf):
+        self.x = int(x)
+        self.y = int(y)
+        self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
         self.real_x = self.x * 32
         self.real_y = self.y * 32
         self._display_surf = displaysurf
@@ -236,3 +242,28 @@ class Resource:
         self.position = position
         self.x = position[0]
         self.y = position[1]
+
+class NPC:
+    def __init__(self, x, y, imagefilename, scriptfilename, displaysurf):
+        self.script = scriptfilename
+        self.x = int(x)
+        self.y = int(y)
+        self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
+        self.real_x = self.x * 32
+        self.real_y = self.y * 32
+        self._display_surf = displaysurf
+        self.name = None
+        #stats
+        #_b for bonuses
+        self.STR = 0
+        self.DEX = 0
+        self.INT = 0
+        self.ATK_b = 0
+        self.DEF_b = 0
+        self.HP = 0
+        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
+        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
+
+    def _recalculate_stats(self):
+        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
+        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b

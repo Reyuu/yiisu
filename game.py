@@ -52,7 +52,7 @@ class App:
         pygame.key.set_repeat(500, 50)
         self.root = Tk.Tk()
         self.root.withdraw()
-        self.Player = Player_c(7, 7, load_png("player_test.png"), self._display_surf)
+        self.Player = Player_c(7, 7, "player_test.png", self._display_surf)
         self.init_scripting()
         self.open(dialog=1)
         self.relative_pos = lambda x: x*32 +  self.vx
@@ -87,6 +87,11 @@ class App:
         def change_player_pos(x, y):
             self.Player.x = x
             self.Player.y = y
+        def put_npc(x, y, imagefilename, scriptfilename):
+            return NPC(x, y, imagefilename, scriptfilename, self._display_surf)
+        def process_npc(npc):
+            self.Playfield.npcmapp[npc.y][npc.x] = npc
+
         self.ScriptHandler = ScriptHandler(debug=self.debug)
         self.ScriptHandler.safe_functions.update({"talk": self.talk,
                                                   "open_map": self.open,
@@ -100,7 +105,9 @@ class App:
                                                   "open_script": self.ScriptHandler.get_file,
                                                   "parse_file": self.ScriptHandler.parse_file,
                                                   "print": print_me,
-                                                  "change_player_pos": change_player_pos})
+                                                  "change_player_pos": change_player_pos,
+                                                  "put_npc": put_npc,
+                                                  "process_npc": process_npc})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -242,11 +249,8 @@ class App:
         pass
 
     def console(self):
-        #TODO history of commands
-        #TODO last get command
-        #TODO scrolling (low)
         #TODO blit outcome of the given commands
-
+        ##TODO scrolling (low)
         s = pygame.Surface((self.width, self.fontsize*1.3), pygame.SRCALPHA)
         s.fill((0, 0, 0, 230))
         inputs = []
@@ -358,6 +362,10 @@ class App:
             for y in xrange(len(self.Playfield.mapp)):
                 for x in xrange(len(self.Playfield.mapp[y])):
                     self._display_surf.blit(self.Playfield.mapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
+                    if not(self.Playfield.npcmapp[y][x] == None):
+                        self._display_surf.blit(self.Playfield.npcmapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
+                    else:
+                        pass
                     #Draw rectangle to show collision
                     #debug
                     if self.debug:
@@ -369,6 +377,15 @@ class App:
                                              (255, 0, 0),
                                              Rect(32*x - self.Camera.x, 32*y - self.Camera.y, 32, 32),
                                              2)
+                        if not(self.Playfield.npcmapp[y][x] == None):
+                            s = pygame.Surface((32, 32), pygame.SRCALPHA)
+                            s.fill((0, 0, 255, 100))
+                            self._display_surf.blit(s, (32*x - self.Camera.x, 32*y - self.Camera.y))
+                            pygame.draw.rect(self._display_surf,
+                                             (0, 0, 255),
+                                             Rect(32*x - self.Camera.x, 32*y - self.Camera.y, 32, 32),
+                                             2)
+
             s = pygame.Surface((32, 32), pygame.SRCALPHA)
             s.fill((0, 0, 0, 155))
             self._display_surf.blit(s, (self.Player.x*32 -  self.Camera.x*32, self.Player.y*32 - self.Camera.y*32))
