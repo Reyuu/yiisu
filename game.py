@@ -304,6 +304,8 @@ class App:
             while myvar:
                 self.on_render()
                 for j in pygame.event.get():
+                    if j.type == pygame.QUIT:
+                        self.on_cleanup()
                     if j.type == pygame.KEYDOWN:
                         if j.key == K_SPACE:
                             myvar = False
