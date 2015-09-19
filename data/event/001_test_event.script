@@ -1,0 +1,11 @@
+array as lines define ["Lorem ipsum dolor sit amet, consectetur adipiscing elit."; "Fusce ultrices nisi eu leo fermentum, nec luctus mi porttitor."; "Pellentesque et leo tristique, tempor lectus id, tincidunt ex."];
+array as someother define ["Vestibulum tincidunt nunc eget est scelerisque congue."; "Nulla eu felis commodo, consequat sem vel, laoreet metus."];
+tuple as dda define ["da"; 121];
+execute talk with (lines);
+execute talk with (someother);
+execute open_map with ("data/map/da.xml");
+destroy lines;
+destroy someother;
+destroy dda;
+break;
+#Remember to destroy variables afterwards;

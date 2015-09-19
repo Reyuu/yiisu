@@ -1,0 +1,58 @@
+Scripting language documentation
+The language is case insensitive when it comes to keywords but is case sensitive with everything else.
+Keywords will be written in uppercase.
+Remember to end all your statements with ; and to leave one blank line at the end.
+
+Commenting:
+	#<comment>;
+	Anything in between # and ; won't be executed. THIS IS ONE LINE COMMENT!
+
+Defining types:
+Basic syntax is
+<TYPE> AS <variable name> DEFINE <variable>;
+
+	Available types:
+		BOOL AS <variable name> DEFINE <variable>;
+		where variable can be 0 or 1
+		
+		INT AS <variable name> DEFINE <variable>;
+		where variable can be any number
+		
+		STRING AS <variable name> DEFINE "<variable>";
+		where variable can be any alphanumeric words with or without spaces
+		
+		ARRAY AS <variable name> DEFINE [<variable1>; <variable2>];
+		must contain at least 2 items
+		defines array
+		
+		TUPLE AS <variable name> DEFINE [<variable1>; <variable2>];
+		must contain at least 2 items
+		defines tuple (fixed size arrays, immutable)
+
+
+Executing functions:
+Functions can be added via safe_functions dict.
+DO NOT ADD ANYTHING THAT INVOLVE EXEC OR EVAL!
+There are two ways of executing functions within a script, one gets you returned variable of a function, second does not.
+
+	GET <function name> WITH (<arguments>) AS <variable name>;
+	Executes function with given arguments and gets its returned value to the variable.
+	
+	EXECUTE <function name> WITH (<arguments>);
+	Executes function with given arguments. Does NOT gets returned value. (faster?)
+
+
+Conditional statements:
+	IF <variable name> IS <value> THEN <function name> WITH (<arguments>);
+	Check if variable is equal to the value, if so then execute function with given arguments;
+
+
+Destroying variables:
+If you do not use given variable, just destroy it to give your program some memory space.
+Feel free to leave any variable you see fit to use in later scripts!
+
+	DESTROY <variable name>;
+	Removes variable from variables dict, thus destroying it.
+	
+	DESTROY ALL;
+	Removes ALL variables from variables dict. USE WITH CAUTION.
