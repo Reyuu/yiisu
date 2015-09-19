@@ -23,7 +23,9 @@ class ScriptHandler:
     def get_file(self, filename):
         self.file = open(filename)
         self.file = self.file.read()
-        self.file = self.file.split(";\r\n")
+        self.file = self.file.replace("\r\n", "\n")
+        self.file = self.file.replace("\r", "\n")
+        self.file = self.file.split(";\n")
     
     def check_if_string(self, s):
         try:
@@ -43,13 +45,13 @@ class ScriptHandler:
 
     def parse_line(self, line_a):
         line = line_a.split(" ")
-        if line[0].upper() == "#":
+        if "#" in line[0].upper():
             pass
-        if line[0].upper() == "BREAK":
+        if "BREAK" in line[0].upper():
             self.execution = False
             if self.debug:
                 print("[WARNING] Broke execution!")
-        if line[0].upper() == "IF":
+        if "IF" in line[0].upper():
             if line[1] in self.variables:
                 is_it = line[3]
                 try:
@@ -96,7 +98,7 @@ class ScriptHandler:
             else:
                 print("[ERROR] %s not in variables" % line[1])
     
-        if line[0].upper() == "GET":
+        if "GET" in line[0].upper():
             if line[0] in self.variables:
                 raise ValueError
             if line[-1] in self.variables:
@@ -136,16 +138,16 @@ class ScriptHandler:
                                 arguments[i] = self.check_if_string(arguments[i])
                     s = self.safe_functions[line[1]](*arguments)
                     self.variables.update({line[-1]: s})
-        if line[0].upper() == "STRING":
+        if "STRING" in line[0].upper():
             type_r = str
             self.variables.update({line[2]: type_r(line[4]).replace("\"", "")})
-        if line[0].upper() == "INT":
+        if "INT" in line[0].upper():
             type_r = int
             self.variables.update({line[2]: type_r(line[4])})
-        if line[0].upper() == "BOOL":
+        if "BOOL" in line[0].upper():
             type_r = bool
             self.variables.update({line[2]: type_r(line[4])})
-        if line[0].upper() == "TUPLE":
+        if "TUPLE" in line[0].upper():
             #TODO fix tuples
             type_r = tuple
             array = " ".join(line[4:]).split("; ")
@@ -162,7 +164,7 @@ class ScriptHandler:
                     except:
                         array[i] = self.check_if_string(array[i])
             self.variables.update({line[2]: type_r(array)})
-        if line[0].upper() == "ARRAY":
+        if "ARRAY" in line[0].upper():
             type_r = list
             array = " ".join(line[4:]).split("; ")
             array[0] = array[0].replace("[", "")
@@ -178,14 +180,14 @@ class ScriptHandler:
                     except:
                         array[i] = self.check_if_string(array[i])
             self.variables.update({line[2]: type_r(array)})
-        if line[0].upper() == "DESTROY":
-            if line[1].upper() == "ALL":
+        if "DESTROY" in line[0].upper():
+            if "ALL" in line[1].upper():
                 self.variables = removekey(self.variables, line[1].lower())
             if line[1] in self.variables.keys():
                 self.variables = removekey(self.variables, line[1])
                 if self.debug:
                     print("[WARNING] Removed variable %s" % line[1])
-        if line[0].upper() == "EXECUTE":
+        if "EXECUTE" in line[0].upper():
             if line[1] in self.safe_functions:
                 start = ""
                 end = ""
