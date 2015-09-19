@@ -244,13 +244,13 @@ class App:
         #TODO scrolling (low)
         #TODO blit outcome of the given commands
 
-        s = pygame.Surface((self.width, self.height-self.height*0.75), pygame.SRCALPHA)
+        s = pygame.Surface((self.width, self.fontsize*1.3), pygame.SRCALPHA)
         s.fill((0, 0, 0, 230))
         inputs = []
         myvar = True
         self.lastcommand = []
         self.Queue.leveltwo += [Resource(s, (0, 0))]
-        self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, self.height-self.height*0.75-self.fontsize*1.2))]
+        self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
         while myvar:
             self.on_render()
             self.Queue.levelthree.pop()
@@ -273,7 +273,8 @@ class App:
                         inputs = []
                     if j.key == K_RETURN:
                         try:
-                            exec("".join(inputs))
+                            #exec("".join(inputs))
+                            self.ScriptHandler.parse_line("".join(inputs))
                             self.lastcommand = inputs
                             inputs = []
                         except SyntaxError:
@@ -285,7 +286,7 @@ class App:
                     if not(myvar):
                         break
                     print("".join(inputs))
-            self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, self.height-self.height*0.75-self.fontsize*1.2))]
+            self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
         self.Queue.pop_all()
 
     def talk(self, lines):
