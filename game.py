@@ -1,7 +1,6 @@
 import pygame
 import xml.etree.cElementTree as ET
 import tkFileDialog
-import pyconsole
 from script_lang import *
 from pygame.locals import *
 from base import *
@@ -85,6 +84,9 @@ class App:
             return i//j
         def print_me(i):
             print(i)
+        def change_player_pos(x, y):
+            self.Player.x = x
+            self.Player.y = y
         self.ScriptHandler = ScriptHandler(debug=self.debug)
         self.ScriptHandler.safe_functions.update({"talk": self.talk,
                                                   "open_map": self.open,
@@ -97,7 +99,8 @@ class App:
                                                   "divide": divide,
                                                   "open_script": self.ScriptHandler.get_file,
                                                   "parse_file": self.ScriptHandler.parse_file,
-                                                  "print": print_me})
+                                                  "print": print_me,
+                                                  "change_player_pos": change_player_pos})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -249,6 +252,7 @@ class App:
         inputs = []
         myvar = True
         self.lastcommand = []
+        offset = 0
         self.Queue.leveltwo += [Resource(s, (0, 0))]
         self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
         while myvar:
@@ -268,14 +272,29 @@ class App:
                         except IndexError:
                             pass
                     if j.key == K_UP:
-                        inputs = self.lastcommand
+                        try:
+                            inputs = self.lastcommand[offset+1]
+                            offset += 1
+                            print(self.lastcommand)
+                        except IndexError:
+                            inputs = self.lastcommand[offset]
                     if j.key == K_DOWN:
-                        inputs = []
+                        try:
+                            if not(offset < 0):
+                                inputs = self.lastcommand[offset-1]
+                                offset -= 1
+                            else:
+                                inputs = self.lastcommand[offset]
+                        except IndexError:
+                            inputs = self.lastcommand[offset]
                     if j.key == K_RETURN:
                         try:
                             #exec("".join(inputs))
                             self.ScriptHandler.parse_line("".join(inputs))
-                            self.lastcommand = inputs
+                            if inputs in self.lastcommand:
+                                pass
+                            else:
+                                self.lastcommand += [inputs]
                             inputs = []
                         except SyntaxError:
                             print("[ERROR] Syntax error")
@@ -285,7 +304,7 @@ class App:
                         inputs += char
                     if not(myvar):
                         break
-                    print("".join(inputs))
+                    #print("".join(inputs))
             self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
         self.Queue.pop_all()
 
