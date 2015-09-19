@@ -257,11 +257,15 @@ class App:
         self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
         while myvar:
             self.on_render()
-            self.Queue.levelthree.pop()
+            try:
+                self.Queue.levelthree.pop()
+            except IndexError:
+                pass
             pygame.display.flip()
             for j in pygame.event.get():
                 mods = pygame.key.get_mods()
                 if j.type == pygame.QUIT:
+                    myvar = False
                     self.on_cleanup()
                 if j.type == pygame.KEYDOWN:
                     if j.key == K_F1:
@@ -305,7 +309,10 @@ class App:
                     if not(myvar):
                         break
                     #print("".join(inputs))
-            self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
+            if len("".join(inputs)) > 0:
+                self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
+            else:
+                pass
         self.Queue.pop_all()
 
     def talk(self, lines):
