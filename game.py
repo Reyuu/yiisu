@@ -265,8 +265,9 @@ class App:
             for j in pygame.event.get():
                 mods = pygame.key.get_mods()
                 if j.type == pygame.QUIT:
-                    myvar = False
+                    import sys
                     self.on_cleanup()
+                    sys.exit(1)
                 if j.type == pygame.KEYDOWN:
                     if j.key == K_F1:
                         myvar = False
@@ -309,8 +310,11 @@ class App:
                     if not(myvar):
                         break
                     #print("".join(inputs))
-            if len("".join(inputs)) > 0:
-                self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
+            if len(inputs) > 0:
+                try:
+                    self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
+                except pygame.error, err:
+                    print("%s" % err)
             else:
                 pass
         self.Queue.pop_all()
