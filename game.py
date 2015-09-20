@@ -5,11 +5,7 @@ from script_lang import *
 from pygame.locals import *
 from base import *
 
-##TODO NPC handling     - events(?)
-#TODO Playfield npc layer
-#TODO NPC entity
-#TODO NPC placing through map scripts
-#TODO NPC scripting
+#TODO NPC collision logic (do the same as in real collisions)
 #More comming soon
 class App:
     def __init__(self):
@@ -59,6 +55,7 @@ class App:
         self.relative_pos_s = lambda x: x +  self.vx
         self.Camera = Camera(self.vxmax, self.vymax, self.Playfield.maxx, self.Playfield.maxy, self.Player)
         self.Camera.calculate_pos()
+        self.col_lambda = lambda x, y: bool(not(self.collision_check_npc(x, y)) and not(self.collision_check(x, y)))
         return True
 
     def init_scripting(self):
@@ -193,42 +190,50 @@ class App:
                     print("[COLLISION] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side))
                 return True
 
+    def collision_check_npc(self, offsetx, offsety):
+        side = "either"
+        if offsetx > 0:
+            side = "right"
+        if offsetx < 0:
+            side = "left"
+        if offsety < 0:
+            side = "top"
+        if offsety > 0:
+            side = "bottom"
+        try:
+            npc_col = self.Playfield.npcmapp[self.Player.y+offsety][self.Player.x+offsetx].collision
+        except AttributeError:
+            npc_col = False
+        if not(npc_col):
+            return False
+        else:
+            if not(self.Playfield.npcmapp[self.Player.y+offsety][self.Player.x+offsetx].event == None):
+                self.ScriptHandler.get_file(self.Playfield.npcmapp[self.Player.y+offsety][self.Player.x+offsetx].event)
+                self.ScriptHandler.parse_file()
+                return True
+            else:
+                if self.debug:
+                    print("[NPC] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side))
+                return True
+
     def on_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == K_UP:
-                if not(self.Player.y-1 < 0):
-                    if not(self.collision_check(0, -1)):
-                        self.Player.y -= 1
-                    else:
-                        pass
-                else:
-                    pass
+                if not(self.Player.y-1 < 0) and self.col_lambda(0, -1):
+                    self.Player.y -= 1
             if event.key == K_DOWN:
-                if not(self.Player.y+2 > self.Playfield.maxy):
-                    if not(self.collision_check(0, 1)):
-                        self.Player.y += 1
-                    else:
-                        pass
+                if not(self.Player.y+2 > self.Playfield.maxy) and self.col_lambda(0, 1):
+                    self.Player.y += 1
                 else:
                     pass
             if event.key == K_LEFT:
-                if not(self.Player.x-1 < 0):
-                    if not(self.collision_check(-1, 0)):
-                        self.Player.x -= 1
-                    else:
-                        pass
-                else:
-                    pass
+                if not(self.Player.x-1 < 0) and self.col_lambda(-1, 0):
+                    self.Player.x -= 1
             if event.key == K_RIGHT:
-                if not(self.Player.x+2 > self.Playfield.maxx):
-                    if not(self.collision_check(1, 0)):
-                        self.Player.x += 1
-                    else:
-                        pass
-                else:
-                    pass
+                if not(self.Player.x+2 > self.Playfield.maxx) and self.col_lambda(1, 0):
+                    self.Player.x += 1
             #if event.key == K_w and pygame.key.get_mods() & KMOD_CTRL:
             #    self.console.set_active()
             if event.key == K_F1:

@@ -253,6 +253,8 @@ class NPC:
         self.real_y = self.y * 32
         self._display_surf = displaysurf
         self.name = None
+        self.collision = True
+        self.event = self.script
         #stats
         #_b for bonuses
         self.STR = 0
