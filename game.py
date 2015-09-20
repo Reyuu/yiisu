@@ -32,19 +32,13 @@ class App:
         pygame.font.init()
         pygame.display.set_caption('mapPlayer')
         self.fontsize = int((((self.width*self.height*16**2)/(640*480)))**(1/2.0))
-        #self.font = pygame.font.SysFont("Monospace", self.fontsize)
         self.font = pygame.font.Font("Cabin-Regular.ttf", self.fontsize)
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         pygame.display.set_icon(pygame.Surface((32,32), pygame.SRCALPHA, 32).convert_alpha())
         self._running = True
-        #self.Tileset = Tileset(self.tilesetfile)
         self.Playfield = Playfield(self.mapsize[0], self.mapsize[1], self.tilesetfile)
         self.Tileset = self.Playfield.tileset
         self.SelectedTile = SelectedTile(self.width-32, self.height-32)
-        #print(type(self.Playfield.mapp[0]))
-        """self.console = pyconsole.Console(self._display_surf, (0, 0, 600, 150))
-        self.console.setvar("python_mode", not self.console.getvar("python_mode"))
-        self.console.set_interpreter()"""
         pygame.key.set_repeat(500, 50)
         self.root = Tk.Tk()
         self.root.withdraw()
@@ -234,8 +228,6 @@ class App:
             if event.key == K_RIGHT:
                 if not(self.Player.x+2 > self.Playfield.maxx) and self.col_lambda(1, 0):
                     self.Player.x += 1
-            #if event.key == K_w and pygame.key.get_mods() & KMOD_CTRL:
-            #    self.console.set_active()
             if event.key == K_F1:
                 self.console()
 
@@ -249,7 +241,6 @@ class App:
             elif event.button == 5:
                 self.vy -= 32
         self.Camera.calculate_pos()
-        #print(self.Camera.x, self.Camera.y, self.Camera.viewportmaxx / 2, self.Camera.viewportmaxy / 2, self.Player.x, self.Player.y)
     def on_loop(self):
         pass
 
@@ -329,17 +320,11 @@ class App:
         self.Queue.pop_all()
 
     def talk(self, lines):
-        #self.state = "talk"
-        #s = pygame.Surface((self.width, self.hei(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))ght), pygame.SRCALPHA)
-        #s.fill((0, 0, 0, 150))
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
-        #self._display_surf.blit(s, (0, 0))
         self.Queue.levelthree += [Resource(s, (0,0))]
         for i in xrange(len(lines)):
-            #self._display_surf.blit(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))
             self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
-            #pygame.display.flip()
             myvar = True
             while myvar:
                 self.on_render()
@@ -352,7 +337,6 @@ class App:
                 if not(myvar):
                     break
         self.Queue.pop_all()
-        #self.state = "game"
         pygame.display.flip()
         #TODO get array and print it in a fancy way
         #TODO BLINKING FUCKING THING INDICATING NEXT PAGE OF TEXT
@@ -401,7 +385,6 @@ class App:
                 else:
                     for j in i:
                         self._display_surf.blit(j.image, j.position)
-            #self.console.draw()
             pygame.display.flip()
         if self.state == "talk":
             for i in [self.Queue.levelone, self.Queue.leveltwo, self.Queue.levelthree]:
@@ -421,7 +404,6 @@ class App:
         if not self.on_init():
             self._running = False
         while self._running:
-            #self.console.process_input()
             for event in pygame.event.get():
                 self.on_event(event)
             self.on_loop()
