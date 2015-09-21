@@ -1,3 +1,4 @@
+# coding=utf-8
 import pygame
 import xml.etree.cElementTree as ET
 import tkFileDialog
@@ -322,10 +323,13 @@ class App:
     def talk(self, lines):
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
-        self.Queue.levelthree += [Resource(s, (0,0))]
+        #TODO use font instead of drawn triangle
+        self.Queue.leveltwo += [Resource(s)]
         for i in xrange(len(lines)):
             self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
             myvar = True
+            self.Queue.levelthree += [Resource(self.font.render("<", True, (0, 40, 255)), ((self.fontsize/2.3)*len(lines[i]), i*self.fontsize))]
+            #self._display_surf.blit(triangle, (len(lines[i])*self.fontsize, i*self.fontsize))
             while myvar:
                 self.on_render()
                 for j in pygame.event.get():
@@ -336,6 +340,7 @@ class App:
                             myvar = False
                 if not(myvar):
                     break
+            self.Queue.levelthree.pop()
         self.Queue.pop_all()
         pygame.display.flip()
         #TODO get array and print it in a fancy way
