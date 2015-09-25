@@ -1,0 +1,12 @@
+array as lines define ["    (Unknown): How are you today?"; "    (Unknown): I'm getting sleepy, so leave me alone"];
+execute talk with (lines);
+destroy lines;
+array as lines define ["What will you do?"; "Choose number"];
+array as choices define ["1. Leave him alone"; "2. Bother him more"];
+get choice with (lines; choices) as outcome;
+destroy lines;
+destroy choices;
+array as lines define ["    (Unknown): GO AWAY YOU PRICK!"];
+if outcome is 1 then talk with (lines);
+destroy outcome;
+destroy lines;

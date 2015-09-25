@@ -104,7 +104,8 @@ class App:
                                                   "change_player_pos": change_player_pos,
                                                   "put_npc": put_npc,
                                                   "process_npc": process_npc,
-                                                  "exit": self.on_cleanup})
+                                                  "exit": self.on_cleanup,
+                                                  "choice": self.choice_talk})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -323,11 +324,54 @@ class App:
                 pass
         self.Queue.pop_all()
 
+    def choice_talk(self, lines, choice):
+        print(lines, choice)
+        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 200))
+        #TODO use font instead of drawn triangle
+        #TODO choices -> function that returns states of the chosen numbers
+        self.Queue.leveltwo += [Resource(s)]
+        for i in xrange(len(lines)):
+            self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
+            myvar = True
+            self.Queue.levelthree += [Resource(self.font.render("<", True, (0, 40, 255)), ((self.fontsize/2.3)*len(lines[i]), i*self.fontsize))]
+            #self._display_surf.blit(triangle, (len(lines[i])*self.fontsize, i*self.fontsize))
+            while myvar:
+                self.on_render()
+                for j in pygame.event.get():
+                    if j.type == pygame.QUIT:
+                        self.on_cleanup()
+                    if j.type == pygame.KEYDOWN:
+                        if j.key == K_SPACE:
+                            myvar = False
+                if not(myvar):
+                    break
+            self.Queue.levelthree.pop()
+        for i in xrange(len(choice)):
+            self.Queue.levelthree += [Resource(self.font.render(choice[i], True, (255, 125, 0)), (0, i*self.fontsize+len(lines)*self.fontsize))]
+        myvar = True
+        while myvar:
+            self.on_render()
+            for j in pygame.event.get():
+                if j.type == pygame.QUIT:
+                    self.on_cleanup()
+                if j.type == pygame.KEYDOWN:
+                    for number, mkey in list(enumerate([K_1, K_2, K_3, K_4, K_5])):
+                        if (j.key == mkey) and (number in xrange(len(choice))):
+                            self.Queue.pop_all()
+                            return number
+            if not(myvar):
+                break
+        self.Queue.pop_all()
+        pygame.display.flip()
+        #TODO pages of text
+        #TODO feature: colored text
     def talk(self, lines):
         #<color=0>
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
         #TODO use font instead of drawn triangle
+        #TODO choices -> function that returns states of the chosen numbers
         self.Queue.leveltwo += [Resource(s)]
         for i in xrange(len(lines)):
             self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
