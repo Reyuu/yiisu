@@ -100,9 +100,9 @@ class ScriptHandler:
     
         if "GET" in line[0].upper():
             if line[0] in self.variables:
-                raise ValueError
+                print("[ERROR] Value error")
             if line[-1] in self.variables:
-                raise ValueError
+                print("[ERROR] Value error")
             if line[1] in self.safe_functions:
                 start = ""
                 end = ""
@@ -125,7 +125,7 @@ class ScriptHandler:
                     s = self.safe_functions[line[1]](arguments)
                     self.variables.update({line[-1]: s})
                 else:
-                    arguments = " ".join(line[start:end]).split("; ")
+                    arguments = " ".join(line[start:end+1]).split("; ")
                     arguments[0] = arguments[0].replace("(", "")
                     arguments[-1] = arguments[-1].replace(")", "")
                     for i in xrange(0, len(arguments)):
@@ -207,7 +207,10 @@ class ScriptHandler:
                             arguments = self.check_if_string(arguments).replace("\"", "")
                         except:
                             arguments = self.check_if_string(arguments)
-                    self.safe_functions[line[1]](arguments)
+                    try:
+                        self.safe_functions[line[1]]()
+                    except:
+                        self.safe_functions[line[1]](arguments)
 
                 else:
                     arguments = " ".join(line[start:end]).split("; ")

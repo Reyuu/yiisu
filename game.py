@@ -103,7 +103,8 @@ class App:
                                                   "print": print_me,
                                                   "change_player_pos": change_player_pos,
                                                   "put_npc": put_npc,
-                                                  "process_npc": process_npc})
+                                                  "process_npc": process_npc,
+                                                  "exit": self.on_cleanup})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -285,7 +286,7 @@ class App:
                             offset += 1
                             print(self.lastcommand)
                         except IndexError:
-                            inputs = self.lastcommand[offset]
+                            pass
                     if j.key == K_DOWN:
                         try:
                             if not(offset < 0):
@@ -294,7 +295,7 @@ class App:
                             else:
                                 inputs = self.lastcommand[offset]
                         except IndexError:
-                            inputs = self.lastcommand[offset]
+                            pass
                     if j.key == K_RETURN:
                         try:
                             #exec("".join(inputs))
