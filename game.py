@@ -6,13 +6,17 @@ from script_lang import *
 from pygame.locals import *
 from base import *
 
-#TODO NPC collision logic (do the same as in real collisions)
+#TODO Enemy entity
+#TODO think bout fighting, stats and levels
+#TODO Random encounter
+#TODO Enemy scripting
+
 #More comming soon
 class App:
     def __init__(self):
         self._running = True
         self._display_surf = None
-        self.size = self.width, self.height = 640, 448
+        self.size = self.width, self.height = 640, 480
         self.offset = 0
         self.tileset_screen = True
         self.tilesetfile = "tileset.png"
@@ -246,8 +250,6 @@ class App:
         pass
 
     def console(self):
-        #TODO blit outcome of the given commands
-        ##TODO scrolling (low)
         s = pygame.Surface((self.width, self.fontsize*1.3), pygame.SRCALPHA)
         s.fill((0, 0, 0, 230))
         inputs = []
@@ -321,6 +323,7 @@ class App:
         self.Queue.pop_all()
 
     def talk(self, lines):
+        #<color=0>
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
         #TODO use font instead of drawn triangle
@@ -343,8 +346,6 @@ class App:
             self.Queue.levelthree.pop()
         self.Queue.pop_all()
         pygame.display.flip()
-        #TODO get array and print it in a fancy way
-        #TODO BLINKING FUCKING THING INDICATING NEXT PAGE OF TEXT
         #TODO pages of text
         #TODO feature: colored text
 
@@ -366,18 +367,18 @@ class App:
                         if self.Playfield.mapp[y][x].collision:
                             s = pygame.Surface((32, 32), pygame.SRCALPHA)
                             s.fill((255, 0, 0, 100))
-                            self._display_surf.blit(s, (32*x - self.Camera.x, 32*y - self.Camera.y))
+                            self._display_surf.blit(s, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
                             pygame.draw.rect(self._display_surf,
                                              (255, 0, 0),
-                                             Rect(32*x - self.Camera.x, 32*y - self.Camera.y, 32, 32),
+                                             Rect(32*x - self.Camera.x*32, 32*y - self.Camera.y*32, 32, 32),
                                              2)
                         if not(self.Playfield.npcmapp[y][x] == None):
                             s = pygame.Surface((32, 32), pygame.SRCALPHA)
                             s.fill((0, 0, 255, 100))
-                            self._display_surf.blit(s, (32*x - self.Camera.x, 32*y - self.Camera.y))
+                            self._display_surf.blit(s, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
                             pygame.draw.rect(self._display_surf,
                                              (0, 0, 255),
-                                             Rect(32*x - self.Camera.x, 32*y - self.Camera.y, 32, 32),
+                                             Rect(32*x - self.Camera.x*32, 32*y - self.Camera.y*32, 32, 32),
                                              2)
 
             s = pygame.Surface((32, 32), pygame.SRCALPHA)

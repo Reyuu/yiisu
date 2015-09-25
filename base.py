@@ -223,6 +223,12 @@ class Camera:
         elif self.y < self.offsetminy:
             self.y = self.offsetminy
 
+        if self.worldsizey < self.viewportmaxy:
+            self.y = self.offsetmaxy/2.0
+        if self.worldsizex < self.viewportmaxx:
+            self.x = self.offsetmaxx/2.0
+
+
 class Queue:
     def __init__(self):
         #1 --> 2 --> 3
