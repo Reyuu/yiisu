@@ -1,8 +1,13 @@
 # yiisu
-Almost nothing here.
+Almost nothing here but try to check out my simple script lang.
 
 - map.py to mapEditor
 - game.py to mapPlayer
+
+##Currenly working on
+- Fighting
+- Stats of player and any other player based classes
+- Objects-on-map processing and scripting
 
 ##Controls - map.py
 |Key|Action|
