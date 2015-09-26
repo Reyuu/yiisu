@@ -78,15 +78,26 @@ class App:
 
         def divide(i, j):
             return i//j
+
         def print_me(i):
             print(i)
+
         def change_player_pos(x, y):
             self.Player.x = x
             self.Player.y = y
+
         def put_npc(x, y, imagefilename, scriptfilename):
             return NPC(x, y, imagefilename, scriptfilename, self._display_surf)
+
         def process_npc(npc):
             self.Playfield.npcmapp[npc.y][npc.x] = npc
+
+        def change_stats(entity, HP, STR, DEX, INT):
+            entity.HP = HP
+            entity.STR = STR
+            entity.DEX = DEX
+            entity.INT = INT
+            entity._recalculate_stats()
 
         self.ScriptHandler = ScriptHandler(debug=self.debug)
         self.ScriptHandler.safe_functions.update({"talk": self.talk,
@@ -105,7 +116,9 @@ class App:
                                                   "put_npc": put_npc,
                                                   "process_npc": process_npc,
                                                   "exit": self.on_cleanup,
-                                                  "choice": self.choice_talk})
+                                                  "choice": self.choice_talk,
+                                                  "change_stats": change_stats})
+        self.ScriptHandler.variables.update({"Player": self.Player})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -364,8 +377,7 @@ class App:
                 break
         self.Queue.pop_all()
         pygame.display.flip()
-        #TODO pages of text
-        #TODO feature: colored text
+
     def talk(self, lines):
         #<color=0>
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)

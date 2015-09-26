@@ -165,31 +165,6 @@ class Playfield():
                     pass
 
 
-class Player_c:
-    def __init__(self, x, y, imagefilename, displaysurf):
-        self.x = int(x)
-        self.y = int(y)
-        self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
-        self.real_x = self.x * 32
-        self.real_y = self.y * 32
-        self._display_surf = displaysurf
-        self.name = None
-        #stats
-        #_b for bonuses
-        self.STR = 0
-        self.DEX = 0
-        self.INT = 0
-        self.ATK_b = 0
-        self.DEF_b = 0
-        self.HP = 0
-        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
-        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
-
-    def _recalculate_stats(self):
-        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
-        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
-
-
 class Camera:
     def __init__(self, viewportmaxx, viewportmaxy, worldsizex, worldsizey, Playerclass):
         self.viewportmaxx = viewportmaxx
@@ -249,6 +224,38 @@ class Resource:
         self.x = position[0]
         self.y = position[1]
 
+
+class Player_c:
+    def __init__(self, x, y, imagefilename, displaysurf):
+        self.x = int(x)
+        self.y = int(y)
+        self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
+        self.real_x = self.x * 32
+        self.real_y = self.y * 32
+        self._display_surf = displaysurf
+        self.name = None
+        #stats
+        #_b for bonuses
+        self.STR = 0
+        self.DEX = 0
+        self.INT = 0
+        self.ATK_b = 0
+        self.DEF_b = 0
+        self.HP = 0
+        self.HP_c = self.HP
+        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
+        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
+        self.EXP = 0
+        self.level_lambda = lambda x: int(x**(1.0/4.0))
+        self.level = self.level_lambda(self.EXP)
+
+    def _recalculate_stats(self):
+        self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
+        self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
+        self.HP_c = self.HP
+        self.level = self.level_lambda(self.EXP)
+
+
 class NPC:
     def __init__(self, x, y, imagefilename, scriptfilename, displaysurf):
         self.script = scriptfilename
@@ -269,9 +276,15 @@ class NPC:
         self.ATK_b = 0
         self.DEF_b = 0
         self.HP = 0
+        self.HP_c = self.HP
         self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
         self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
+        self.EXP = 0
+        self.level_lambda = lambda x: int(x**(1.0/4.0))
+        self.level = self.level_lambda(self.EXP)
 
     def _recalculate_stats(self):
         self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
         self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
+        self.level = self.level_lambda(self.EXP)
+        self.HP_c = self.HP
