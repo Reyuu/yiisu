@@ -225,6 +225,86 @@ class Resource:
         self.y = position[1]
 
 
+class Item:
+    def __init__(self, name="nothing", typ="nothing", equipable_where="nowhere", stats_b=(0, 0, 0, 0, 0, 0)):
+        """
+
+        :stats_b: (STR, DEX, INT, ATK, DEF, HP)
+        """
+        self.stats_b = stats_b
+        self.name = name
+        self.type = typ
+        self.equipable_where = equipable_where
+        self.equiped = False
+
+
+class EQ:
+    def __init__(self, limit):
+        self.limit = limit
+        self.equipped = {"head":Item(),
+                         "rhand":Item(),
+                         "rarm":Item(),
+                         "chest":Item(),
+                         "larm": Item(),
+                         "lhand": Item(),
+                         "legs":Item(),
+                         "feet": Item()}
+        self.backpack = []
+        self.recalculate_bonuses()
+
+    def add_item(self, piece):
+        if self.limit > len(self.backpack):
+            self.backpack += [piece]
+        else:
+            print("Backpack limit reached, remove some items!")
+
+    def remove_item(self, piece):
+        try:
+            self.backpack -= [piece]
+        except ValueError:
+            print("Item not in backpack!")
+
+    def equip(self, piece):
+        if (piece.equipable_where in self.equipped.keys()) or (piece.equipable_where == "nowhere"):
+            try:
+                self.equipped[piece.equipable_where] = piece
+                piece.equiped = True
+            except ValueError:
+                print("You cannot equip it!")
+            except KeyError:
+                print("You cannot equip it!")
+        else:
+            print("You cannot equip it!")
+        self.recalculate_bonuses()
+
+    def unequip(self, where):
+        try:
+            self.backpack[self.backpack.index(self.equipped[where])].equiped = False
+            self.equipped[where] = Item()
+        except KeyError:
+            print("Can't unequip what does not exists")
+        self.recalculate_bonuses()
+
+    def unequip_all(self):
+        self.equipped = {"head":Item(),
+                         "rhand":Item(),
+                         "rarm":Item(),
+                         "chest":Item(),
+                         "larm": Item(),
+                         "lhand": Item(),
+                         "legs":Item(),
+                         "feet": Item()}
+        self.recalculate_bonuses()
+
+    def recalculate_bonuses(self):
+        self.bonuses = {"STR":0, "DEX":0, "INT":0, "ATK":0, "DEF":0, "HP":0}
+        for i in self.equipped.keys():
+            s = self.equipped[i].stats_b
+            for j, k in zip(self.bonuses.keys(), list(s)):
+                self.bonuses[j] += k
+        print("Recalculated bonuses")
+
+
 class Player_c:
     def __init__(self, x, y, imagefilename, displaysurf):
         self.x = int(x)
@@ -248,8 +328,10 @@ class Player_c:
         self.EXP = 0
         self.level_lambda = lambda x: int(x**(1.0/4.0))
         self.level = self.level_lambda(self.EXP)
+        self.EQ = EQ(99)
 
     def _recalculate_stats(self):
+        #TODO add EQ bonuses to player bonuses
         self.ATK = self.STR + (self.STR * (self.DEX/2)) + self.ATK_b
         self.DEF = self.INT + (self.INT * (self.DEX/2)) + self.DEF_b
         self.HP_c = self.HP
