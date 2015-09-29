@@ -92,12 +92,12 @@ class App:
         def process_npc(npc):
             self.Playfield.npcmapp[npc.y][npc.x] = npc
 
-        def change_stats(entity, HP, STR, DEX, INT):
-            entity.HP = HP
-            entity.STR = STR
-            entity.DEX = DEX
-            entity.INT = INT
-            entity._recalculate_stats()
+        def change_stats(entity, stats=(0, 0, 0, 0)):
+            entity.stats["STR"].base_value = stats[0]
+            entity.stats["DEX"].base_value = stats[0]
+            entity.stats["INT"].base_value = stats[0]
+            entity.stats["HP"].base_value = stats[0]
+            entity.recalculate_stats()
 
         self.ScriptHandler = ScriptHandler(debug=self.debug)
         self.ScriptHandler.safe_functions.update({"talk": self.talk,
@@ -250,6 +250,8 @@ class App:
                     self.Player.x += 1
             if event.key == K_F1:
                 self.console()
+            if event.key == K_c:
+                self.check_stats()
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 4 and pygame.key.get_mods() & KMOD_LSHIFT:
@@ -336,6 +338,37 @@ class App:
             else:
                 pass
         self.Queue.pop_all()
+
+    def check_stats(self):
+        keys = self.Player.stats.keys()
+        keys.remove("HP_c")
+        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 200))
+        self.Queue.leveltwo += [Resource(s)]
+        line = pygame.Surface((self.width, 10), pygame.SRCALPHA)
+        line.fill((255, 255, 255, 200))
+        self.Queue.leveltwo += [Resource(line, (0, self.height-self.height/2.5))]
+        scaled = pygame.transform.scale(self.Player.image, (self.Player.image.get_width()*7, self.Player.image.get_height()*7))
+        self.Queue.leveltwo += [Resource(scaled, (0,50))]
+        for i, j in list(enumerate(keys)):
+            self.Queue.levelthree += [Resource(self.font.render("%s: %i+%i = %i" % (j,
+                                                                                    self.Player.stats[j].base_value,
+                                                                                    self.Player.stats[j].bonus_value,
+                                                                                    self.Player.stats[j].value),
+                                                                True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+        myvar = True
+        while myvar:
+            self.on_render()
+            for j in pygame.event.get():
+                if j.type == pygame.QUIT:
+                    self.on_cleanup()
+                if j.type == pygame.KEYDOWN:
+                    if j.key == K_c:
+                        myvar = False
+            if not(myvar):
+                break
+        self.Queue.pop_all()
+        pygame.display.flip()
 
     def choice_talk(self, lines, choice):
         print(lines, choice)

@@ -388,3 +388,32 @@ class NPC:
         self.stats["ATK"].recalculate_with(self.stats["STR"].value + (self.stats["STR"].value * (self.stats["DEX"].value/2)))
         self.stats["DEF"].recalculate_with(self.stats["INT"].value + (self.stats["INT"].value * (self.stats["DEX"].value/2)))
         self.level = self.level_lambda(self.EXP)
+
+class Mob:
+    def __init__(self, imagefilename):
+        self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
+        self.name = None
+        self.stats = {"STR": Attribute(),
+                      "DEX": Attribute(),
+                      "INT": Attribute(),
+                      "HP": Attribute(),
+                      "HP_c": Attribute(),
+                      "ATK": Attribute(),
+                      "DEF": Attribute(),
+                      }
+        self.EXP = 0
+        self.level_lambda = lambda x: int(x**(1.0/4.0))
+        self.level = self.level_lambda(self.EXP)
+        self.EQ = EQ(99)
+        self.recalculate_stats()
+        self.stats["HP_c"].value = self.stats["HP"].value
+
+    def recalculate_stats(self):
+        self.EQ.recalculate_bonuses()
+        for i in self.EQ.bonuses.keys():
+            self.stats[i].bonus_value = self.EQ.bonuses[i]
+        for i in self.stats.keys():
+            self.stats[i].recalculate()
+        self.stats["ATK"].recalculate_with(self.stats["STR"].value + (self.stats["STR"].value * (self.stats["DEX"].value/2)))
+        self.stats["DEF"].recalculate_with(self.stats["INT"].value + (self.stats["INT"].value * (self.stats["DEX"].value/2)))
+        self.level = self.level_lambda(self.EXP)
