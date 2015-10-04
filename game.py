@@ -2,6 +2,7 @@
 import pygame
 import xml.etree.cElementTree as ET
 import tkFileDialog
+import random
 from script_lang import *
 from pygame.locals import *
 from base import *
@@ -10,6 +11,7 @@ from base import *
 #TODO think bout fighting, stats and levels
 #TODO Random encounter
 #TODO Enemy scripting
+#TODO instead of holding the surfaces of the tiles in the Playfield, get them from the Tileset
 
 #More comming soon
 class App:
@@ -55,6 +57,8 @@ class App:
         self.Camera = Camera(self.vxmax, self.vymax, self.Playfield.maxx, self.Playfield.maxy, self.Player)
         self.Camera.calculate_pos()
         self.col_lambda = lambda x, y: bool(not(self.collision_check_npc(x, y)) and not(self.collision_check(x, y)))
+        self.random = random.randint(0, 1000)
+        self.ScriptHandler.variables.update({"random_number": self.random})
         return True
 
     def init_scripting(self):
@@ -92,12 +96,17 @@ class App:
         def process_npc(npc):
             self.Playfield.npcmapp[npc.y][npc.x] = npc
 
-        def change_stats(entity, stats=(0, 0, 0, 0)):
-            entity.stats["STR"].base_value = stats[0]
-            entity.stats["DEX"].base_value = stats[0]
-            entity.stats["INT"].base_value = stats[0]
-            entity.stats["HP"].base_value = stats[0]
+        def change_stats(entity, stat=(0, 0, 0, 0)):
+            print(entity, stat)
+            entity.stats["STR"].base_value = stat[0]
+            entity.stats["DEX"].base_value = stat[1]
+            entity.stats["INT"].base_value = stat[2]
+            entity.stats["HP"].base_value = stat[3]
             entity.recalculate_stats()
+
+        def get_mob(imagefilename, scriptfilename, chances=(0, 0)):
+            return Mob(imagefilename, scriptfilename)
+
 
         self.ScriptHandler = ScriptHandler(debug=self.debug)
         self.ScriptHandler.safe_functions.update({"talk": self.talk,
@@ -117,8 +126,9 @@ class App:
                                                   "process_npc": process_npc,
                                                   "exit": self.on_cleanup,
                                                   "choice": self.choice_talk,
-                                                  "change_stats": change_stats})
-        self.ScriptHandler.variables.update({"Player": self.Player})
+                                                  "change_stats": change_stats,
+                                                  "get_mob": get_mob})
+        self.ScriptHandler.variables.update({"player": self.Player})
 
     def open(self, filename=None, dialog=0):
         if dialog == 1:
@@ -231,38 +241,37 @@ class App:
                 return True
 
     def on_event(self, event):
+        moved = False
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == K_UP:
                 if not(self.Player.y-1 < 0) and self.col_lambda(0, -1):
                     self.Player.y -= 1
+                    moved = True
             if event.key == K_DOWN:
                 if not(self.Player.y+2 > self.Playfield.maxy) and self.col_lambda(0, 1):
                     self.Player.y += 1
+                    moved = True
                 else:
                     pass
             if event.key == K_LEFT:
                 if not(self.Player.x-1 < 0) and self.col_lambda(-1, 0):
                     self.Player.x -= 1
+                    moved = True
             if event.key == K_RIGHT:
                 if not(self.Player.x+2 > self.Playfield.maxx) and self.col_lambda(1, 0):
                     self.Player.x += 1
+                    moved = True
             if event.key == K_F1:
                 self.console()
             if event.key == K_c:
                 self.check_stats()
-
-        if event.type == MOUSEBUTTONDOWN:
-            if event.button == 4 and pygame.key.get_mods() & KMOD_LSHIFT:
-                self.vx += 32
-            elif event.button == 5 and pygame.key.get_mods() & KMOD_LSHIFT:
-                self.vx -= 32
-            elif event.button == 4:
-                self.vy += 32
-            elif event.button == 5:
-                self.vy -= 32
         self.Camera.calculate_pos()
+        if moved == True:
+            self.random = random.randint(0, 1000)
+            self.ScriptHandler.variables.update({"random_number": self.random})
+        moved = False
     def on_loop(self):
         pass
 
@@ -340,6 +349,8 @@ class App:
         self.Queue.pop_all()
 
     def check_stats(self):
+        #TODO skills
+        self.Player.recalculate_stats()
         keys = self.Player.stats.keys()
         keys.remove("HP_c")
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
@@ -350,12 +361,15 @@ class App:
         self.Queue.leveltwo += [Resource(line, (0, self.height-self.height/2.5))]
         scaled = pygame.transform.scale(self.Player.image, (self.Player.image.get_width()*7, self.Player.image.get_height()*7))
         self.Queue.leveltwo += [Resource(scaled, (0,50))]
+        last_index = 0
         for i, j in list(enumerate(keys)):
             self.Queue.levelthree += [Resource(self.font.render("%s: %i+%i = %i" % (j,
                                                                                     self.Player.stats[j].base_value,
                                                                                     self.Player.stats[j].bonus_value,
                                                                                     self.Player.stats[j].value),
                                                                 True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+            last_index = i
+        self.Queue.levelthree += [Resource(self.font.render("LEVEL: %i" % self.Player.level, True, (50, 255, 50)), (self.width/2.0, (last_index+1)*self.fontsize+50))]
         myvar = True
         while myvar:
             self.on_render()
@@ -444,8 +458,19 @@ class App:
         #print(self.camx, self.camy, self.vxmax / 2, self.vymax / 2, self.Player.x, self.Player.y)
         if self.state == "game":
             self._display_surf.fill((0, 0, 0))
-            for y in xrange(len(self.Playfield.mapp)):
-                for x in xrange(len(self.Playfield.mapp[y])):
+            if self.Camera.worldsizey < self.Camera.viewportmaxy:
+                rangey = xrange(len(self.Playfield.mapp))
+            else:
+                rangey = xrange(self.Camera.y, (self.Camera.viewportmaxy+self.Camera.y))
+
+            for y in rangey:
+                if self.Camera.worldsizex < self.Camera.viewportmaxx:
+                    rangex = xrange(len(self.Playfield.mapp[y]))
+                else:
+                    rangex = xrange(self.Camera.x, (self.Camera.viewportmaxx+self.Camera.x))
+
+                for x in rangex:
+                    #print(x, y, self.Camera.x, self.Camera.x, len(self.Playfield.mapp), len(self.Playfield.mapp[y]))
                     self._display_surf.blit(self.Playfield.mapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
                     if not(self.Playfield.npcmapp[y][x] == None):
                         self._display_surf.blit(self.Playfield.npcmapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))

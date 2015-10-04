@@ -213,12 +213,18 @@ class ScriptHandler:
                         self.safe_functions[line[1]](arguments)
 
                 else:
-                    arguments = " ".join(line[start:end]).split("; ")
+                    print(start, end)
+                    arguments = " ".join(line[start:end+1])
+                    print(arguments)
+                    arguments = arguments.split("; ")
+                    print(arguments)
                     arguments[0] = arguments[0].replace("(", "")
                     arguments[-1] = arguments[-1].replace(")", "")
+                    print(arguments)
                     for i in xrange(0, len(arguments)):
                         try:
                             arguments[i] = self.variables[arguments[i]]
+                            print(arguments[i])
                         except:
                             try:
                                 arguments[i] = self.check_if_string(arguments[i]).replace("\"", "")

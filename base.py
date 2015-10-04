@@ -202,6 +202,7 @@ class Camera:
             self.y = self.offsetmaxy/2.0
         if self.worldsizex < self.viewportmaxx:
             self.x = self.offsetmaxx/2.0
+        #print(self.x, self.y, self.offsetmaxx, self.offsetmaxy)
 
 
 class Queue:
@@ -390,8 +391,9 @@ class NPC:
         self.level = self.level_lambda(self.EXP)
 
 class Mob:
-    def __init__(self, imagefilename):
+    def __init__(self, imagefilename, scriptfilename):
         self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
+        self.script = scriptfilename
         self.name = None
         self.stats = {"STR": Attribute(),
                       "DEX": Attribute(),
