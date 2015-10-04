@@ -164,6 +164,7 @@ class App:
                 self.Playfield.mapp[y][x].pos_tileset_x = None
             else:
                 self.Playfield.mapp[y][x].pos_tileset_x = int(tile.find("pos_tile_x").text)
+
             if tile.find("pos_tile_y").text == "None":
                 self.Playfield.mapp[y][x].pos_tileset_y = None
             else:
@@ -180,7 +181,7 @@ class App:
                 self.Playfield.mapp[y][x].event = tile.find("event").text
             if self.debug:
                 print("[FOUND] Tile at %s, %s" % (x, y))
-        self.Playfield.process_images()
+        #self.Playfield.process_images()
         print("[SUCCESS] Parsed %s successfully!" % filename)
         try:
             self.Camera = Camera(self.vxmax, self.vymax, self.Playfield.maxx, self.Playfield.maxy, self.Player)
@@ -458,6 +459,7 @@ class App:
         #print(self.camx, self.camy, self.vxmax / 2, self.vymax / 2, self.Player.x, self.Player.y)
         if self.state == "game":
             self._display_surf.fill((0, 0, 0))
+            tileset = self.Playfield.tileset.image
             if self.Camera.worldsizey < self.Camera.viewportmaxy:
                 rangey = xrange(len(self.Playfield.mapp))
             else:
@@ -470,8 +472,10 @@ class App:
                     rangex = xrange(self.Camera.x, (self.Camera.viewportmaxx+self.Camera.x))
 
                 for x in rangex:
+                    pos_x = self.Playfield.mapp[y][x].pos_tileset_x
+                    pos_y = self.Playfield.mapp[y][x].pos_tileset_y
                     #print(x, y, self.Camera.x, self.Camera.x, len(self.Playfield.mapp), len(self.Playfield.mapp[y]))
-                    self._display_surf.blit(self.Playfield.mapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
+                    self._display_surf.blit(get_from_image(pos_x, pos_y, tileset), (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
                     if not(self.Playfield.npcmapp[y][x] == None):
                         self._display_surf.blit(self.Playfield.npcmapp[y][x].image, (32*x - self.Camera.x*32, 32*y - self.Camera.y*32))
                     else:

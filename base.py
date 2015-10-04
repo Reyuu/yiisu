@@ -81,6 +81,15 @@ def doRectsOverlap(rect1, rect2):
             return True
     return False
 
+def get_from_image(x, y, tileset):
+    s = pygame.Surface((32, 32))
+    if (x is None) or (y is None):
+        return s
+    else:
+        s.blit(tileset, (0, 0), (x, y, 32, 32))
+    return s
+
+
 class Tileset():
     def __init__(self, name):
         self.name = name
@@ -120,12 +129,14 @@ class SelectedTile():
         #t.rect = self.rect
         t.collision = self.collision
         t.event = self.event
+        t.image = self.image
         t.image.blit(self.image, (0, 0))
 
 
 class Tile():
     def __init__(self):
-        self.image = pygame.Surface((32, 32))
+        #self.image = pygame.Surface((32, 32))
+        self.image = None
         #self.pos_x = None
         #self.pos_y = None
         self.pos_tileset_x = None
@@ -155,15 +166,18 @@ class Playfield():
         self.maxy = h
 
     def process_images(self):
+        #ONLY FOR MAP.PY
+        #DO NOT EVEN TRY TO USE IT IN GAME.PY
+        #MEMORY INEFFICIENT
         for y in xrange(len(self.mapp)):
             for x in xrange(len(self.mapp[y])):
+                self.mapp[y][x].image = pygame.Surface((32, 32))
                 #print(self.mapp[y][x].pos_tileset_x, self.mapp[y][x].pos_tileset_y)
                 try:
                     self.mapp[y][x].image.blit(self.tileset.image, (0, 0), (self.mapp[y][x].pos_tileset_x, self.mapp[y][x].pos_tileset_y, 32, 32))
                 except TypeError:
                     #self.mapp[y][x].image.blit(self.mapp[y][x].image, (x*32, y*32), (0, 0, 32, 32))
                     pass
-
 
 class Camera:
     def __init__(self, viewportmaxx, viewportmaxy, worldsizex, worldsizey, Playerclass):

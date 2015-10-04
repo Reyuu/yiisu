@@ -157,7 +157,9 @@ class App:
                 self.Playfield.mapp[y][x].event = None
             else:
                 self.Playfield.mapp[y][x].event = tile.find("event").text
-        self.Playfield.process_images()
+        #self.Playfield.process_images()
+        self.vx = 0
+        self.vy = 0
         print("[SUCCESS] Parsed %s successfully!" % filename)
 
  
@@ -282,9 +284,15 @@ class App:
             self._display_surf.blit(self.SelectedTile.image, (self.SelectedTile.pos_x, self.SelectedTile.pos_y))
         if not self.tileset_screen:
             self._display_surf.fill((255, 255, 255))
+            tileset = self.Tileset.image
             for y in xrange(len(self.Playfield.mapp)):
                 for x in xrange(len(self.Playfield.mapp[y])):
-                    self._display_surf.blit(self.Playfield.mapp[y][x].image, (32*x + self.vx, 32*y + self.vy))
+                    pos_x = self.Playfield.mapp[y][x].pos_tileset_x
+                    pos_y = self.Playfield.mapp[y][x].pos_tileset_y
+                    try:
+                        self._display_surf.blit(get_from_image(pos_x, pos_y, tileset), (32*x + self.vx, 32*y + self.vy))
+                    except TypeError:
+                        self._display_surf.blit(pygame.Surface((32, 32)), (32*x + self.vx, 32*y + self.vy))
                     #Draw rectangle to show collision
                     if self.Playfield.mapp[y][x].collision:
                         s = pygame.Surface((32, 32), pygame.SRCALPHA)
