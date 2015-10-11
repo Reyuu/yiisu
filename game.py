@@ -357,29 +357,40 @@ class App:
         s.fill((0, 0, 0, 200))
         self.Queue.leveltwo += [Resource(s)]
         scaled = pygame.transform.scale(self.Player.image, (self.Player.image.get_width()*7, self.Player.image.get_height()*7))
-        self.Queue.leveltwo += [Resource(scaled, (0,50))]
+        self.Queue.leveltwo += [Resource(scaled, (-25,50))]
         stats_tuple = ("STR", "CON", "DEX", "PER", "WIS", "INT", "LCK", "","HP", "MP", "SP", "", "ATK_k", "ATK_r", "ATK_m", "DEF_kr", "DEF_m", "", "HIT_kr", "HIT_m", "FIL_kr", "FIL_m")
         last_index = 0
+        self.Queue.levelthree += [Resource(self.font.render("Attribute:", True, (255, 255, 255)), (self.width/3.0, 25))]
+        self.Queue.levelthree += [Resource(self.font.render("Base + bonus = value", True, (255, 255, 255)), (self.width/1.5, 25))]
         for i, j in list(enumerate(stats_tuple)):
             try:
-                self.Queue.levelthree += [Resource(self.font.render("%s: %i+%i = %i/%i" % (self.Player.stats[j].name,
-                                                                                        self.Player.stats[j].base_value,
-                                                                                        self.Player.stats[j].bonus_value,
-                                                                                        self.Player.stats[j].value,
-                                                                                        self.Player.stats[j].current_value),
-                                                                    True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+                self.Queue.levelthree += [Resource(self.font.render("%s: " % (self.Player.stats[j].name),
+                                                                    True, (255, 255, 255)), (self.width/3.0, i*self.fontsize+50))]
+                stats_str = "%i+%i = %i/%i" % (self.Player.stats[j].base_value, self.Player.stats[j].bonus_value, self.Player.stats[j].current_value, self.Player.stats[j].value)
+                stats_color = (176, 227, 89)
+                if self.Player.stats[j].current_value <= 0:
+                    stats_color = (227, 89, 107)
+                if self.Player.stats[j].current_value >= self.Player.stats[j].value:
+                    stats_color = (140, 89, 227)
+                self.Queue.levelthree += [Resource(self.font.render(stats_str,
+                                                                    True, stats_color), (self.width/1.5, i*self.fontsize+50))]
             except AttributeError:
-                self.Queue.levelthree += [Resource(self.font.render("%s: %i+%i = %i" % (self.Player.stats[j].name,
-                                                                                        self.Player.stats[j].base_value,
-                                                                                        self.Player.stats[j].bonus_value,
-                                                                                        self.Player.stats[j].value),
-                                                                    True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+                self.Queue.levelthree += [Resource(self.font.render("%s: " % (self.Player.stats[j].name),
+                                                                    True, (255, 255, 255)), (self.width/3.0, i*self.fontsize+50))]
+                stats_str = "%i+%i = %i" % (self.Player.stats[j].base_value, self.Player.stats[j].bonus_value, self.Player.stats[j].value)
+                stats_color = (89, 227, 209)
+                if i in xrange(0, 8):
+                    stats_color = (176, 227, 89)
+                if i in xrange(11, 17):
+                    stats_color = (140, 89, 227)
+                self.Queue.levelthree += [Resource(self.font.render(stats_str,
+                                                                    True, stats_color), (self.width/1.5, i*self.fontsize+50))]
             except KeyError:
-                self.Queue.levelthree += [Resource(self.font.render("", True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+                pass
             else:
-                self.Queue.levelthree += [Resource(self.font.render("", True, (255, 255, 255)), (self.width/2.0, i*self.fontsize+50))]
+                pass
             last_index = i
-        self.Queue.levelthree += [Resource(self.font.render("LEVEL: %i" % self.Player.level, True, (50, 255, 50)), (self.width/2.0, (last_index+1)*self.fontsize+50))]
+        self.Queue.levelthree += [Resource(self.font.render("LEVEL: %i" % self.Player.level, True, (176, 227, 89)), (self.width/2.0, (last_index+1)*self.fontsize+50))]
         myvar = True
         while myvar:
             self.on_render()
