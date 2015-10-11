@@ -241,12 +241,8 @@ class Resource:
 
 
 class Item:
-    def __init__(self, name="nothing", typ="nothing", equipable_where="nowhere", stats_b=(0, 0, 0, 0, 0, 0)):
-        """
-
-        :stats_b: (STR, DEX, INT, ATK, DEF, HP)
-        """
-        self.stats_b = stats_b
+    def __init__(self, name="nothing", typ="nothing", equipable_where="nowhere", stats_d={}):
+        self.stats_d = stats_d
         self.name = name
         self.description = ""
         self.type = typ
@@ -255,8 +251,9 @@ class Item:
 
 
 class EQ:
-    def __init__(self, limit):
+    def __init__(self, limit, stats):
         self.limit = limit
+        self.stats = stats
         self.equipped = {"head":Item(),
                          "rhand":Item(),
                          "rarm":Item(),
@@ -266,6 +263,7 @@ class EQ:
                          "legs":Item(),
                          "feet": Item()}
         self.backpack = []
+        self.bonuses = {}
         self.recalculate_bonuses()
 
     def add_item(self, piece):
@@ -313,25 +311,27 @@ class EQ:
         self.recalculate_bonuses()
 
     def recalculate_bonuses(self):
-        self.bonuses = {"STR":0, "DEX":0, "INT":0, "ATK":0, "DEF":0, "HP":0}
         for i in self.equipped.keys():
-            s = self.equipped[i].stats_b
-            for j, k in zip(self.bonuses.keys(), list(s)):
-                self.bonuses[j] += k
-        print("Recalculated bonuses")
+            for j in self.equipped[i].stats_d.keys():
+                self.stats[j].bonus_value += self.equipped[i].stats_d[j]
+        #print("Recalculated bonuses")
 
 class Attribute:
-    def __init__(self):
+    def __init__(self, name="", resource=False):
+        self.name = name
         self.type = "attribute"
         self.base_value = 0
         self.bonus_value = 0
         self.value = self.base_value + self.bonus_value
+        if resource:
+            self.current_value = self.value
 
     def recalculate(self):
         self.value = self.base_value + self.bonus_value
 
     def recalculate_with(self, x):
-        self.value = self.base_value + self.bonus_value + x
+        self.base_value = x
+        self.value = self.base_value + self.bonus_value
 
 class Player_c:
     def __init__(self, x, y, imagefilename, displaysurf):
@@ -342,29 +342,58 @@ class Player_c:
         self.real_y = self.y * 32
         self._display_surf = displaysurf
         self.name = None
-        self.stats = {"STR": Attribute(),
-                      "DEX": Attribute(),
-                      "INT": Attribute(),
-                      "HP": Attribute(),
-                      "HP_c": Attribute(),
-                      "ATK": Attribute(),
-                      "DEF": Attribute(),
+        self.stats = {"STR": Attribute("Strength"),
+                      "CON": Attribute("Constitution"),
+                      "DEX": Attribute("Dexterity"),
+                      "PER": Attribute("Perception"),
+                      "WIS": Attribute("Wisdom"),
+                      "INT": Attribute("Intelligence"),
+                      "LCK": Attribute("Luck"),
+
+                      "HP": Attribute("Health points", True),
+                      "MP": Attribute("Magic points", True),
+                      "SP": Attribute("Stamina points", True),
+
+                      "ATK_k": Attribute("Melee attack"),
+                      "ATK_r": Attribute("Ranged attack"),
+                      "ATK_m": Attribute("Magic attack"),
+                      "DEF_kr": Attribute("Melee and ranged defence"),
+                      "DEF_m": Attribute("Magic defence"),
+
+                      "HIT_kr": Attribute("Melee and ranged hit chance"),
+                      "HIT_m": Attribute("Magic hit chance"),
+                      "FIL_kr": Attribute("Melee and ranged fail chance"),
+                      "FIL_m": Attribute("Magic fail chance")
                       }
         self.EXP = 0
         self.level_lambda = lambda x: int(x**(1.0/4.0))
         self.level = self.level_lambda(self.EXP)
-        self.EQ = EQ(99)
+        self.EQ = EQ(99, self.stats)
         self.recalculate_stats()
-        self.stats["HP_c"].value = self.stats["HP"].value
 
     def recalculate_stats(self):
         self.EQ.recalculate_bonuses()
+        #Change the way bonus stats are calculated
         for i in self.EQ.bonuses.keys():
-            self.stats[i].bonus_value = self.EQ.bonuses[i]
+            self.stats[i].bonus_value = self.EQ.bonuses[i].value
         for i in self.stats.keys():
             self.stats[i].recalculate()
-        self.stats["ATK"].recalculate_with(self.stats["STR"].value + (self.stats["STR"].value * (self.stats["DEX"].value/2)))
-        self.stats["DEF"].recalculate_with(self.stats["INT"].value + (self.stats["INT"].value * (self.stats["DEX"].value/2)))
+        self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
+        self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)
+        self.stats["SP"].recalculate_with(1.5*self.stats["CON"].value+3)
+        self.stats["ATK_k"].recalculate_with(1.25*self.stats["STR"].value+self.stats["INT"].value)
+        self.stats["ATK_r"].recalculate_with(1.25*self.stats["DEX"].value+self.stats["INT"].value)
+        self.stats["ATK_m"].recalculate_with(1.25*self.stats["INT"].value+self.stats["PER"].value)
+        self.stats["DEF_kr"].recalculate_with(2*self.stats["CON"].value)
+        self.stats["DEF_m"].recalculate_with(2*self.stats["INT"].value)
+        self.stats["HIT_kr"].recalculate_with((self.stats["DEX"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2))
+        if self.stats["HIT_kr"].base_value > 100.0:
+            self.stats["HIT_kr"].value = 100.0
+        self.stats["HIT_m"].value = 100.0
+        self.stats["FIL_kr"].value = 0.0
+        self.stats["FIL_m"].recalculate_with(100-((self.stats["INT"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2)))
+        if self.stats["FIL_m"].base_value < 0.0:
+            self.stats["FIL_m"].value = 0.0
         self.level = self.level_lambda(self.EXP)
 
 class NPC:
@@ -379,29 +408,58 @@ class NPC:
         self.real_y = self.y * 32
         self._display_surf = displaysurf
         self.name = None
-        self.stats = {"STR": Attribute(),
-                      "DEX": Attribute(),
-                      "INT": Attribute(),
-                      "HP": Attribute(),
-                      "HP_c": Attribute(),
-                      "ATK": Attribute(),
-                      "DEF": Attribute(),
+        self.stats = {"STR": Attribute("Strength"),
+                      "CON": Attribute("Constitution"),
+                      "DEX": Attribute("Dexterity"),
+                      "PER": Attribute("Perception"),
+                      "WIS": Attribute("Wisdom"),
+                      "INT": Attribute("Intelligence"),
+                      "LCK": Attribute("Luck"),
+
+                      "HP": Attribute("Health points", True),
+                      "MP": Attribute("Magic points", True),
+                      "SP": Attribute("Stamina points", True),
+
+                      "ATK_k": Attribute("Melee attack"),
+                      "ATK_r": Attribute("Ranged attack"),
+                      "ATK_m": Attribute("Magic attack"),
+                      "DEF_kr": Attribute("Melee and ranged defence"),
+                      "DEF_m": Attribute("Magic defence"),
+
+                      "HIT_kr": Attribute("Melee and ranged hit chance"),
+                      "HIT_m": Attribute("Magic hit chance"),
+                      "FIL_kr": Attribute("Melee and ranged fail chance"),
+                      "FIL_m": Attribute("Magic fail chance")
                       }
         self.EXP = 0
         self.level_lambda = lambda x: int(x**(1.0/4.0))
         self.level = self.level_lambda(self.EXP)
-        self.EQ = EQ(99)
+        self.EQ = EQ(99, self.stats)
         self.recalculate_stats()
-        self.stats["HP_c"].value = self.stats["HP"].value
 
     def recalculate_stats(self):
         self.EQ.recalculate_bonuses()
+        #Change the way bonus stats are calculated
         for i in self.EQ.bonuses.keys():
-            self.stats[i].bonus_value = self.EQ.bonuses[i]
+            self.stats[i].bonus_value = self.EQ.bonuses[i].value
         for i in self.stats.keys():
             self.stats[i].recalculate()
-        self.stats["ATK"].recalculate_with(self.stats["STR"].value + (self.stats["STR"].value * (self.stats["DEX"].value/2)))
-        self.stats["DEF"].recalculate_with(self.stats["INT"].value + (self.stats["INT"].value * (self.stats["DEX"].value/2)))
+        self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
+        self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)
+        self.stats["SP"].recalculate_with(1.5*self.stats["CON"].value+3)
+        self.stats["ATK_k"].recalculate_with(1.25*self.stats["STR"].value+self.stats["INT"].value)
+        self.stats["ATK_r"].recalculate_with(1.25*self.stats["DEX"].value+self.stats["INT"].value)
+        self.stats["ATK_m"].recalculate_with(1.25*self.stats["INT"].value+self.stats["PER"].value)
+        self.stats["DEF_kr"].recalculate_with(2*self.stats["CON"].value)
+        self.stats["DEF_m"].recalculate_with(2*self.stats["INT"].value)
+        self.stats["HIT_kr"].recalculate_with((self.stats["DEX"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2))
+        if self.stats["HIT_kr"].value > 100.0:
+            self.stats["HIT_kr"].value = 100.0
+        self.stats["HIT_m"].value = 100.0
+        self.stats["FIL_kr"].value = 0.0
+        self.stats["FIL_m"].recalculate_with(100-((self.stats["INT"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2)))
+        if self.stats["FIL_m"].value < 0.0:
+            self.stats["FIL_m"].value = 0.0
         self.level = self.level_lambda(self.EXP)
 
 class Mob:
@@ -409,27 +467,56 @@ class Mob:
         self.image = load_png(imagefilename)[0] # load_png("image.png") in init field required
         self.script = scriptfilename
         self.name = None
-        self.stats = {"STR": Attribute(),
-                      "DEX": Attribute(),
-                      "INT": Attribute(),
-                      "HP": Attribute(),
-                      "HP_c": Attribute(),
-                      "ATK": Attribute(),
-                      "DEF": Attribute(),
+        self.stats = {"STR": Attribute("Strength"),
+                      "CON": Attribute("Constitution"),
+                      "DEX": Attribute("Dexterity"),
+                      "PER": Attribute("Perception"),
+                      "WIS": Attribute("Wisdom"),
+                      "INT": Attribute("Intelligence"),
+                      "LCK": Attribute("Luck"),
+
+                      "HP": Attribute("Health points", True),
+                      "MP": Attribute("Magic points", True),
+                      "SP": Attribute("Stamina points", True),
+
+                      "ATK_k": Attribute("Melee attack"),
+                      "ATK_r": Attribute("Ranged attack"),
+                      "ATK_m": Attribute("Magic attack"),
+                      "DEF_kr": Attribute("Melee and ranged defence"),
+                      "DEF_m": Attribute("Magic defence"),
+
+                      "HIT_kr": Attribute("Melee and ranged hit chance"),
+                      "HIT_m": Attribute("Magic hit chance"),
+                      "FIL_kr": Attribute("Melee and ranged fail chance"),
+                      "FIL_m": Attribute("Magic fail chance")
                       }
         self.EXP = 0
         self.level_lambda = lambda x: int(x**(1.0/4.0))
         self.level = self.level_lambda(self.EXP)
-        self.EQ = EQ(99)
+        self.EQ = EQ(99, self.stats)
         self.recalculate_stats()
-        self.stats["HP_c"].value = self.stats["HP"].value
 
     def recalculate_stats(self):
         self.EQ.recalculate_bonuses()
+        #Change the way bonus stats are calculated
         for i in self.EQ.bonuses.keys():
-            self.stats[i].bonus_value = self.EQ.bonuses[i]
+            self.stats[i].bonus_value = self.EQ.bonuses[i].value
         for i in self.stats.keys():
             self.stats[i].recalculate()
-        self.stats["ATK"].recalculate_with(self.stats["STR"].value + (self.stats["STR"].value * (self.stats["DEX"].value/2)))
-        self.stats["DEF"].recalculate_with(self.stats["INT"].value + (self.stats["INT"].value * (self.stats["DEX"].value/2)))
+        self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
+        self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)
+        self.stats["SP"].recalculate_with(1.5*self.stats["CON"].value+3)
+        self.stats["ATK_k"].recalculate_with(1.25*self.stats["STR"].value+self.stats["INT"].value)
+        self.stats["ATK_r"].recalculate_with(1.25*self.stats["DEX"].value+self.stats["INT"].value)
+        self.stats["ATK_m"].recalculate_with(1.25*self.stats["INT"].value+self.stats["PER"].value)
+        self.stats["DEF_kr"].recalculate_with(2*self.stats["CON"].value)
+        self.stats["DEF_m"].recalculate_with(2*self.stats["INT"].value)
+        self.stats["HIT_kr"].recalculate_with((self.stats["DEX"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2))
+        if self.stats["HIT_kr"].value > 100.0:
+            self.stats["HIT_kr"].value = 100.0
+        self.stats["HIT_m"].value = 100.0
+        self.stats["FIL_kr"].value = 0.0
+        self.stats["FIL_m"].recalculate_with(100-((self.stats["INT"].value/2) + ((1.5*self.stats["PER"].value)**2/4) + (self.stats["LCK"].value/2)))
+        if self.stats["FIL_m"].value < 0.0:
+            self.stats["FIL_m"].value = 0.0
         self.level = self.level_lambda(self.EXP)
