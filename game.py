@@ -488,6 +488,7 @@ class App:
                         self.Player.EQ.bonuses = {}
                         self.Player.EQ.recalculate_bonuses()
                         self.Player.recalculate_stats()
+                        offset = 0
                         inventory_surf = get_state_inventory()
                     if j.key == K_i:
                         myvar = False

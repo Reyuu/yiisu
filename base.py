@@ -369,7 +369,7 @@ class Player_c:
 
     def zero_bonus_stats(self):
         for i in self.stats.keys():
-            self.stats[i].bonus_valueba = 0
+            self.stats[i].bonus_value = 0
 
     def recalculate_stats(self):
         self.zero_bonus_stats()
