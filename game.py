@@ -3,6 +3,7 @@ import pygame
 import xml.etree.cElementTree as ET
 import tkFileDialog
 import random
+import itertools
 from script_lang import *
 from pygame.locals import *
 from base import *
@@ -96,16 +97,38 @@ class App:
         def process_npc(npc):
             self.Playfield.npcmapp[npc.y][npc.x] = npc
 
-        def change_stats(entity, stat=(0, 0, 0, 0)):
-            print(entity, stat)
-            entity.stats["STR"].base_value = stat[0]
-            entity.stats["DEX"].base_value = stat[1]
-            entity.stats["INT"].base_value = stat[2]
-            entity.stats["HP"].base_value = stat[3]
+        def change_stat(entity, stat, value):
+            print(entity, stat, value)
+            entity.stats[stat].base_value = int(value)
             entity.recalculate_stats()
+
+        def add_item_from_EQ(entity, item):
+            entity.EQ.add_item(item)
+
+        def get_item_from_EQ(entity, index):
+            return entity.EQ.backpack[index]
+
+        def remove_item_from_EQ(entity, item):
+            entity.EQ.remove_item(item)
 
         def get_mob(imagefilename, scriptfilename, chances=(0, 0)):
             return Mob(imagefilename, scriptfilename)
+
+        def get_dict_from_lists(keys, values):
+            magic_dict = {}
+            for i, j in itertools.izip(keys, values):
+                magic_dict.update({i: j})
+            return magic_dict
+
+        def get_from_dict(dict, key):
+            return dict[key]
+
+        def get_item(name, typ, equipable_where, stats_d):
+            return Item(name, typ, equipable_where, stats_d)
+
+        def recover_stat(entity, stat):
+            entity.stats[stat].current_value = entity.stats[stat].value
+
 
 
         self.ScriptHandler = ScriptHandler(debug=self.debug)
@@ -126,8 +149,15 @@ class App:
                                                   "process_npc": process_npc,
                                                   "exit": self.on_cleanup,
                                                   "choice": self.choice_talk,
-                                                  "change_stats": change_stats,
-                                                  "get_mob": get_mob})
+                                                  "change_stat": change_stat,
+                                                  "get_mob": get_mob,
+                                                  "get_item": get_item,
+                                                  "get_item_from_EQ": get_item_from_EQ,
+                                                  "remove_item_from_EQ": remove_item_from_EQ,
+                                                  "add_item_to_EQ": add_item_from_EQ,
+                                                  "get_dict_from_lists": get_dict_from_lists,
+                                                  "get_from_dict": get_from_dict,
+                                                  "recover": recover_stat})
         self.ScriptHandler.variables.update({"player": self.Player})
 
     def open(self, filename=None, dialog=0):
@@ -268,6 +298,8 @@ class App:
                 self.console()
             if event.key == K_c:
                 self.check_stats()
+            if event.key == K_i:
+                self.check_inventory()
         self.Camera.calculate_pos()
         if moved == True:
             self.random = random.randint(0, 1000)
@@ -370,7 +402,7 @@ class App:
                 stats_color = (176, 227, 89)
                 if self.Player.stats[j].current_value <= 0:
                     stats_color = (227, 89, 107)
-                if self.Player.stats[j].current_value >= self.Player.stats[j].value:
+                if self.Player.stats[j].current_value > self.Player.stats[j].value:
                     stats_color = (140, 89, 227)
                 self.Queue.levelthree += [Resource(self.font.render(stats_str,
                                                                     True, stats_color), (self.width/1.5, i*self.fontsize+50))]
@@ -404,6 +436,59 @@ class App:
                 break
         self.Queue.pop_all()
         pygame.display.flip()
+
+    def check_inventory(self):
+        s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+        s.fill((0, 0, 0, 200))
+        offset = 0
+        frame = pygame.Surface((self.fontsize, self.fontsize), pygame.SRCALPHA)
+        pygame.draw.rect(frame, (255, 0, 0), Rect(0, 0, self.fontsize, self.fontsize), 1)
+        #TODO check if Item is equpipped, if true then display something
+        #TODO Equipping, unequipping
+        def get_state_inventory():
+            inventory_surf = pygame.Surface((self.width, self.fontsize*len(self.Player.EQ.backpack)), pygame.SRCALPHA)
+            inventory_surf.fill((0, 0, 0, 0))
+            for i in xrange(offset, len(self.Player.EQ.backpack)):
+                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].name, True, (89, 227, 209)), (0, (i*self.fontsize)-(self.fontsize*offset)))
+                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].equipable_where, True, (209, 227, 89)), (self.width/2.0, (i*self.fontsize)-(self.fontsize*offset)))
+                last_index = 0
+                if self.Player.EQ.backpack[i] in self.Player.EQ.equipped.values():
+                    pygame.draw.rect(inventory_surf, (227, 209, 89), Rect(self.width-self.fontsize, (i*self.fontsize)-(self.fontsize*offset), self.fontsize, self.fontsize))
+                for j in self.Player.EQ.backpack[i].stats_d.keys():
+                    inventory_surf.blit(self.font.render("%s= %s" % (j, self.Player.EQ.backpack[i].stats_d[j]), True, (255, 255, 255)), (self.width/1.5+last_index*64, (i*self.fontsize)-(self.fontsize*offset)))
+                    last_index += 1
+            return inventory_surf
+        inventory_surf = get_state_inventory()
+        myvar = True
+        while myvar:
+            slice = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            slice.fill((0, 0, 0, 0))
+            slice.blit(inventory_surf, (0, 0), (0, offset*self.fontsize, self.width, self.height))
+            self.Queue.leveltwo += [Resource(s)]
+            self.Queue.levelthree += [Resource(slice, (0, 0))]
+            self.Queue.levelthree += [Resource(frame, (self.width-self.fontsize, 0))]
+            self.on_render()
+            for j in pygame.event.get():
+                if j.type == pygame.QUIT:
+                    self.on_cleanup()
+                if j.type == pygame.KEYDOWN:
+                    if j.key == K_DOWN:
+                        if offset+1 in xrange(0, len(self.Player.EQ.backpack)):
+                            offset += 1
+                        print(offset)
+                    if j.key == K_UP:
+                        if offset-1 in xrange(0, len(self.Player.EQ.backpack)):
+                            offset -= 1
+                        print(offset)
+                    if j.key == K_RETURN:
+                        self.Player.EQ.equip(self.Player.EQ.backpack[offset])
+                        inventory_surf = get_state_inventory()
+                    if j.key == K_i:
+                        myvar = False
+            if not(myvar):
+                break
+            self.Queue.pop_all()
+        self.Queue.pop_all()
 
     def choice_talk(self, lines, choice):
         print(lines, choice)

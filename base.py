@@ -279,25 +279,16 @@ class EQ:
             print("Item not in backpack!")
 
     def equip(self, piece):
-        if (piece.equipable_where in self.equipped.keys()) or (piece.equipable_where == "nowhere"):
-            try:
-                self.equipped[piece.equipable_where] = piece
-                piece.equiped = True
-            except ValueError:
-                print("You cannot equip it!")
-            except KeyError:
-                print("You cannot equip it!")
-        else:
-            print("You cannot equip it!")
+        self.equipped[piece.equipable_where] = piece
         self.recalculate_bonuses()
 
-    def unequip(self, where):
+    '''def unequip(self, where):
         try:
             self.backpack[self.backpack.index(self.equipped[where])].equiped = False
             self.equipped[where] = Item()
         except KeyError:
             print("Can't unequip what does not exists")
-        self.recalculate_bonuses()
+        self.recalculate_bonuses()'''
 
     def unequip_all(self):
         self.equipped = {"head":Item(),
