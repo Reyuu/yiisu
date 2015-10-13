@@ -481,7 +481,13 @@ class App:
                             offset -= 1
                         print(offset)
                     if j.key == K_RETURN:
-                        self.Player.EQ.equip(self.Player.EQ.backpack[offset])
+                        if self.Player.EQ.backpack[offset] == self.Player.EQ.equipped[self.Player.EQ.backpack[offset].equipable_where]:
+                            self.Player.EQ.equip(Item("nothing", "nothing", self.Player.EQ.backpack[offset].equipable_where))
+                        else:
+                            self.Player.EQ.equip(self.Player.EQ.backpack[offset])
+                        self.Player.EQ.bonuses = {}
+                        self.Player.EQ.recalculate_bonuses()
+                        self.Player.recalculate_stats()
                         inventory_surf = get_state_inventory()
                     if j.key == K_i:
                         myvar = False

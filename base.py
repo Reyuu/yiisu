@@ -302,10 +302,14 @@ class EQ:
         self.recalculate_bonuses()
 
     def recalculate_bonuses(self):
+        self.bonuses = {}
+        print(self.equipped)
         for i in self.equipped.keys():
             for j in self.equipped[i].stats_d.keys():
-                self.stats[j].bonus_value += self.equipped[i].stats_d[j]
-        #print("Recalculated bonuses")
+                try:
+                    self.bonuses[j] += self.equipped[i].stats_d[j]
+                except KeyError:
+                    self.bonuses.update({j: self.equipped[i].stats_d[j]})
 
 class Attribute:
     def __init__(self, name="", resource=False):
@@ -323,6 +327,7 @@ class Attribute:
     def recalculate_with(self, x):
         self.base_value = x
         self.value = self.base_value + self.bonus_value
+
 
 class Player_c:
     def __init__(self, x, y, imagefilename, displaysurf):
@@ -362,11 +367,16 @@ class Player_c:
         self.EQ = EQ(99, self.stats)
         self.recalculate_stats()
 
+    def zero_bonus_stats(self):
+        for i in self.stats.keys():
+            self.stats[i].bonus_valueba = 0
+
     def recalculate_stats(self):
+        self.zero_bonus_stats()
         self.EQ.recalculate_bonuses()
         #Change the way bonus stats are calculated
         for i in self.EQ.bonuses.keys():
-            self.stats[i].bonus_value = self.EQ.bonuses[i].value
+            self.stats[i].bonus_value = self.EQ.bonuses[i]
         for i in self.stats.keys():
             self.stats[i].recalculate()
         self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
