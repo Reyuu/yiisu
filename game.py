@@ -317,7 +317,7 @@ class App:
         offset = 0
         self.Queue.leveltwo += [Resource(s, (0, 0))]
         self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
-        while myvar:
+        while myvar and self._running:
             self.on_render()
             try:
                 self.Queue.levelthree.pop()
@@ -424,7 +424,7 @@ class App:
             last_index = i
         self.Queue.levelthree += [Resource(self.font.render("LEVEL: %i" % self.Player.level, True, (176, 227, 89)), (self.width/2.0, (last_index+1)*self.fontsize+50))]
         myvar = True
-        while myvar:
+        while myvar and self._running:
             self.on_render()
             for j in pygame.event.get():
                 if j.type == pygame.QUIT:
@@ -460,7 +460,7 @@ class App:
             return inventory_surf
         inventory_surf = get_state_inventory()
         myvar = True
-        while myvar:
+        while myvar and self._running:
             slice = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             slice.fill((0, 0, 0, 0))
             slice.blit(inventory_surf, (0, 0), (0, offset*self.fontsize, self.width, self.height))
@@ -523,7 +523,7 @@ class App:
         for i in xrange(len(choice)):
             self.Queue.levelthree += [Resource(self.font.render(choice[i], True, (255, 125, 0)), (0, i*self.fontsize+len(lines)*self.fontsize))]
         myvar = True
-        while myvar:
+        while myvar and self._running:
             self.on_render()
             for j in pygame.event.get():
                 if j.type == pygame.QUIT:
@@ -550,7 +550,7 @@ class App:
             myvar = True
             self.Queue.levelthree += [Resource(self.font.render("<", True, (0, 40, 255)), ((self.fontsize/2.3)*len(lines[i]), i*self.fontsize))]
             #self._display_surf.blit(triangle, (len(lines[i])*self.fontsize, i*self.fontsize))
-            while myvar:
+            while myvar and self._running:
                 self.on_render()
                 for j in pygame.event.get():
                     if j.type == pygame.QUIT:
@@ -569,7 +569,7 @@ class App:
     def on_render(self):
         #print((self.camx - self.Player.x))
         #print(self.camx, self.camy, self.vxmax / 2, self.vymax / 2, self.Player.x, self.Player.y)
-        if self.state == "game":
+        if (self.state == "game") and (self._running):
             self._display_surf.fill((0, 0, 0))
             tileset = self.Playfield.tileset.image
             if self.Camera.worldsizey < self.Camera.viewportmaxy:
@@ -623,7 +623,7 @@ class App:
                     for j in i:
                         self._display_surf.blit(j.image, j.position)
             pygame.display.flip()
-        if self.state == "talk":
+        if self.state == "talk" and self._running:
             for i in [self.Queue.levelone, self.Queue.leveltwo, self.Queue.levelthree]:
                 if i == []:
                     pass
@@ -634,6 +634,7 @@ class App:
             pass
 
     def on_cleanup(self):
+        self._running = False
         self.Queue.pop_all()
         pygame.quit()
 
