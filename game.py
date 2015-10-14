@@ -98,7 +98,8 @@ class App:
             self.Playfield.npcmapp[npc.y][npc.x] = npc
 
         def change_stat(entity, stat, value):
-            print(entity, stat, value)
+            if self.debug is True:
+                print(entity, stat, value)
             entity.stats[stat].base_value = int(value)
             entity.recalculate_stats()
 
@@ -129,6 +130,17 @@ class App:
         def recover_stat(entity, stat):
             entity.stats[stat].current_value = entity.stats[stat].value
 
+        def and_d(*args):
+            and_d = None
+            for i in args:
+                and_d = and_d and i
+            return and_d
+
+        def or_d(*args):
+            or_d = None
+            for i in args:
+                or_d = or_d or i
+            return or_d
 
 
         self.ScriptHandler = ScriptHandler(debug=self.debug)
@@ -157,7 +169,9 @@ class App:
                                                   "add_item_to_EQ": add_item_from_EQ,
                                                   "get_dict_from_lists": get_dict_from_lists,
                                                   "get_from_dict": get_from_dict,
-                                                  "recover": recover_stat})
+                                                  "recover": recover_stat,
+                                                  "and": and_d,
+                                                  "or": or_d})
         self.ScriptHandler.variables.update({"player": self.Player})
 
     def open(self, filename=None, dialog=0):
@@ -220,7 +234,7 @@ class App:
             print("[WARNING] Camera cannot initialize because instance of %s is not present" % errcode)
             print("          If you get this at the start of the app don't worry!")
         self.on_render()
-        print(filename)
+        #print(filename)
         self.ScriptHandler.get_file(filename.replace(".xml", ".script"))
         self.ScriptHandler.parse_file()
 
@@ -342,7 +356,8 @@ class App:
                         try:
                             inputs = self.lastcommand[offset+1]
                             offset += 1
-                            print(self.lastcommand)
+                            if self.debug:
+                                print(self.lastcommand)
                         except IndexError:
                             pass
                     if j.key == K_DOWN:
@@ -434,8 +449,11 @@ class App:
                         myvar = False
             if not(myvar):
                 break
-        self.Queue.pop_all()
-        pygame.display.flip()
+        if self._running:
+            self.Queue.pop_all()
+            pygame.display.flip()
+        else:
+            self.on_cleanup()
 
     def check_inventory(self):
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
@@ -443,30 +461,68 @@ class App:
         offset = 0
         frame = pygame.Surface((self.fontsize, self.fontsize), pygame.SRCALPHA)
         pygame.draw.rect(frame, (255, 0, 0), Rect(0, 0, self.fontsize, self.fontsize), 1)
-        #TODO check if Item is equpipped, if true then display something
-        #TODO Equipping, unequipping
+        y_offset_cost = self.fontsize+5
+        bar = pygame.Surface((self.width, y_offset_cost))
+        bar.fill((0, 0, 0))
+        bar.blit(self.font.render("Item name:", True, (255, 255, 255)), (0, 0))
+        bar.blit(self.font.render("Part:", True, (255, 255, 255)), (self.width/2.0, 0))
+        bar.blit(self.font.render("Bonuses:", True, (255, 255, 255)), (self.width/1.5, 0))
+        bar.blit(self.font.render("Equipped:", True, (255, 255, 255)), (self.width-(self.fontsize*len("Equipped:")/2), 0))
+        scaled_player_image = pygame.transform.scale(self.Player.image, (self.Player.image.get_width()*7, self.Player.image.get_height()*7))
         def get_state_inventory():
-            inventory_surf = pygame.Surface((self.width, self.fontsize*len(self.Player.EQ.backpack)), pygame.SRCALPHA)
+            inventory_surf = pygame.Surface((self.width, self.fontsize*len(self.Player.EQ.backpack)+y_offset_cost+10), pygame.SRCALPHA)
             inventory_surf.fill((0, 0, 0, 0))
             for i in xrange(offset, len(self.Player.EQ.backpack)):
-                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].name, True, (89, 227, 209)), (0, (i*self.fontsize)-(self.fontsize*offset)))
-                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].equipable_where, True, (209, 227, 89)), (self.width/2.0, (i*self.fontsize)-(self.fontsize*offset)))
+                y_cord = (i*self.fontsize)-(self.fontsize*offset)
+                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].name, True, (89, 227, 209)), (0, y_cord+y_offset_cost))
+                inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].equipable_where, True, (209, 227, 89)), (self.width/2.0, y_cord+y_offset_cost))
                 last_index = 0
                 if self.Player.EQ.backpack[i] in self.Player.EQ.equipped.values():
-                    pygame.draw.rect(inventory_surf, (227, 209, 89), Rect(self.width-self.fontsize, (i*self.fontsize)-(self.fontsize*offset), self.fontsize, self.fontsize))
+                    pygame.draw.rect(inventory_surf, (227, 209, 89), Rect(self.width-self.fontsize, y_cord+y_offset_cost, self.fontsize, self.fontsize))
                 for j in self.Player.EQ.backpack[i].stats_d.keys():
-                    inventory_surf.blit(self.font.render("%s= %s" % (j, self.Player.EQ.backpack[i].stats_d[j]), True, (255, 255, 255)), (self.width/1.5+last_index*64, (i*self.fontsize)-(self.fontsize*offset)))
+                    inventory_surf.blit(self.font.render("%s= %s" % (j, self.Player.EQ.backpack[i].stats_d[j]), True, (255, 255, 255)), (self.width/1.5+last_index*64, y_cord+y_offset_cost))
                     last_index += 1
             return inventory_surf
+
+        def get_bonuses_table():
+            bonus_table = pygame.Surface((self.width/1.25, self.height/1.25), pygame.SRCALPHA)
+            s_keys = sorted(self.Player.EQ.bonuses.keys())
+            bonus_table.blit(self.font.render("Bonuses", True, (209, 227, 89)), (0, 0))
+            for i, j in list(enumerate(s_keys)):
+                bonus_table.blit(self.font.render("%s= %s" % (self.Player.stats[j].name, self.Player.EQ.bonuses[j]), True, (89, 227, 209)), (0, self.fontsize*i+y_offset_cost))
+            return bonus_table
+
+        def get_equipped():
+            equipped = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+            positions_d = {"head": (112, 7),
+                           "chest": (112, 128),
+                           "larm": (63, 105),
+                           "rarm": (140, 91),
+                           "lhand": (49, 161),
+                           "rhand": (168, 60),
+                           "legs": (112, 196),
+                           "feet": (112, 217)}
+            for i in self.Player.EQ.equipped.keys():
+                try:
+                    if not(self.Player.EQ.equipped[i].name == "nothing"):
+                        equipped.blit(self.font.render(self.Player.EQ.equipped[i].name, True, (255, 255, 255), (0, 0, 0)), positions_d[self.Player.EQ.equipped[i].equipable_where])
+                except KeyError:
+                    pass
+            return equipped
+
         inventory_surf = get_state_inventory()
         myvar = True
         while myvar and self._running:
             slice = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             slice.fill((0, 0, 0, 0))
-            slice.blit(inventory_surf, (0, 0), (0, offset*self.fontsize, self.width, self.height))
+            slice.blit(inventory_surf, (0, 0), (0, offset*self.fontsize, self.width, (self.fontsize*10+y_offset_cost)))
             self.Queue.leveltwo += [Resource(s)]
             self.Queue.levelthree += [Resource(slice, (0, 0))]
-            self.Queue.levelthree += [Resource(frame, (self.width-self.fontsize, 0))]
+            self.Queue.levelthree += [Resource(frame, (self.width-self.fontsize, y_offset_cost))]
+            self.Queue.levelthree += [Resource(bar)]
+            self.Queue.leveltwo += [Resource(scaled_player_image, (0, self.fontsize*10+y_offset_cost))]
+            self.Queue.levelthree += [Resource(get_equipped(), (0, self.fontsize*10+y_offset_cost))]
+            self.Queue.levelthree += [Resource(get_bonuses_table(), (self.width/2.0, self.height/2.5))]
             self.on_render()
             for j in pygame.event.get():
                 if j.type == pygame.QUIT:
@@ -475,11 +531,13 @@ class App:
                     if j.key == K_DOWN:
                         if offset+1 in xrange(0, len(self.Player.EQ.backpack)):
                             offset += 1
-                        print(offset)
+                        if self.debug:
+                            print(offset)
                     if j.key == K_UP:
                         if offset-1 in xrange(0, len(self.Player.EQ.backpack)):
                             offset -= 1
-                        print(offset)
+                        if self.debug:
+                            print(offset)
                     if j.key == K_RETURN:
                         if self.Player.EQ.backpack[offset] == self.Player.EQ.equipped[self.Player.EQ.backpack[offset].equipable_where]:
                             self.Player.EQ.equip(Item("nothing", "nothing", self.Player.EQ.backpack[offset].equipable_where))
@@ -498,7 +556,8 @@ class App:
         self.Queue.pop_all()
 
     def choice_talk(self, lines, choice):
-        print(lines, choice)
+        if self.debug:
+            print(lines, choice)
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
         #TODO use font instead of drawn triangle
