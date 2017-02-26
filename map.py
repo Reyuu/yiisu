@@ -3,9 +3,9 @@ import os
 import pygame.event
 import pygame.mixer
 import xml.etree.cElementTree as ET
-import Tkinter as Tk
-import tkFileDialog
-import tkSimpleDialog
+import tkinter as Tk
+import tkinter.filedialog
+import tkinter.simpledialog
 from pygame.locals import *
 from array import array
 from base import *
@@ -54,15 +54,18 @@ class App:
             ('Windows Bitmap','*.bmp'),
             ('JPEG / JFIF','*.jpg'),
             ('CompuServer GIF','*.gif'),]
-        tileset = tkFileDialog.askopenfilename(defaultextension='.png', filetypes=myFormats, title="Open tileset image")
+        tileset = tkinter.filedialog.askopenfilename(defaultextension='.png', filetypes=myFormats, title="Open tileset image")
         self.tilesetfile = tileset
         self.Playfield = Playfield(size[0], size[1], self.tilesetfile)
         self.Tileset = self.Playfield.tileset
 
     def add_event(self):
         x, y = pygame.mouse.get_pos()
-        filename = tkFileDialog.askopenfilename(defaultextension='.script', filetypes=[('supported', ('*.script'))], initialdir="./")
-        filename = os.path.relpath(filename)
+        try:
+            filename = tkinter.filedialog.askopenfilename(defaultextension='.script', filetypes=[('supported', ('*.script'))], initialdir="./")
+            filename = os.path.relpath(filename)
+        except ValueError:
+            return False
         nx = (x - (x % 32) -  self.vx) / 32
         ny = (y - (y % 32) - self.vy) / 32
         print(nx, ny)
@@ -71,7 +74,10 @@ class App:
 
     def save(self):
         #2015-07-30
-        filename = tkFileDialog.asksaveasfilename(defaultextension='.xml', filetypes=[('supported', ('*.xml'))])
+        try:
+            filename = tkinter.filedialog.asksaveasfilename(defaultextension='.xml', filetypes=[('supported', ('*.xml'))])
+        except ValueError:
+            return False
         mapp = ET.Element("map")
         size = ET.SubElement(mapp, "size")
         size_x = ET.SubElement(size, "x")
@@ -86,8 +92,8 @@ class App:
         player_y.text = str(7)
         tileset.text = str(self.tilesetfile)
 
-        for y in xrange(len(self.Playfield.mapp)):
-            for x in xrange(len(self.Playfield.mapp[y])):
+        for y in range(len(self.Playfield.mapp)):
+            for x in range(len(self.Playfield.mapp[y])):
                 if (self.Playfield.mapp[y][x].pos_tileset_x == None) and (self.Playfield.mapp[y][x].pos_tileset_y == None) and (self.Playfield.mapp[y][x].collision == False):
                     pass
                 else:
@@ -116,7 +122,7 @@ class App:
             print("[ERROR] Couldn't write!")
 
     def open(self):
-        filename = tkFileDialog.askopenfilename(defaultextension='.xml', filetypes=[('supported', ('*.xml'))])
+        filename = tkinter.filedialog.askopenfilename(defaultextension='.xml', filetypes=[('supported', ('*.xml'))])
         try:
             e = ET.parse(filename).getroot()
             print("[SUCCESS] Opened %s successfully!" % filename)
@@ -248,7 +254,7 @@ class App:
                 ny = y - (y % 32) - self.vy
                 print("Formatted: %i, %i" % (nx, ny))
                 try:
-                    self.SelectedTile.mutate(self.Playfield.mapp[ny/32][nx/32])
+                    self.SelectedTile.mutate(self.Playfield.mapp[int(ny/32)][int(nx/32)])
                     print(self.SelectedTile.collision)
                 except IndexError:
                     pass
@@ -285,8 +291,8 @@ class App:
         if not self.tileset_screen:
             self._display_surf.fill((255, 255, 255))
             tileset = self.Tileset.image
-            for y in xrange(len(self.Playfield.mapp)):
-                for x in xrange(len(self.Playfield.mapp[y])):
+            for y in range(len(self.Playfield.mapp)):
+                for x in range(len(self.Playfield.mapp[y])):
                     pos_x = self.Playfield.mapp[y][x].pos_tileset_x
                     pos_y = self.Playfield.mapp[y][x].pos_tileset_y
                     try:

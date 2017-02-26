@@ -65,7 +65,7 @@ class ScriptHandler:
                     if line[5] in self.safe_functions:
                         start = ""
                         end = ""
-                        for i in xrange(0, len(line)):
+                        for i in range(0, len(line)):
                             if "(" in line[i]:
                                 start = i
                             if ")" in line[i]:
@@ -86,7 +86,7 @@ class ScriptHandler:
                             arguments = " ".join(line[start:end]).split("; ")
                             arguments[0] = arguments[0].replace("(", "")
                             arguments[-1] = arguments[-1].replace(")", "")
-                            for i in xrange(0, len(arguments)):
+                            for i in range(0, len(arguments)):
                                 try:
                                     arguments[i] = self.variables[arguments[i]]
                                 except:
@@ -106,7 +106,7 @@ class ScriptHandler:
             if line[1] in self.safe_functions:
                 start = ""
                 end = ""
-                for i in xrange(0, len(line)):
+                for i in range(0, len(line)):
                     if "(" in line[i]:
                         start = i
                     if ")" in line[i]:
@@ -128,7 +128,7 @@ class ScriptHandler:
                     arguments = " ".join(line[start:end+1]).split("; ")
                     arguments[0] = arguments[0].replace("(", "")
                     arguments[-1] = arguments[-1].replace(")", "")
-                    for i in xrange(0, len(arguments)):
+                    for i in range(0, len(arguments)):
                         try:
                             arguments[i] = self.variables[arguments[i]]
                         except:
@@ -153,7 +153,7 @@ class ScriptHandler:
             array = " ".join(line[4:]).split("; ")
             array[0] = array[0].replace("[", "")
             array[-1] = array[-1].replace("]", "")
-            for i in xrange(0, len(array)):
+            for i in range(0, len(array)):
                 #check if in self.variables
                 #check if string
                 try:
@@ -169,7 +169,7 @@ class ScriptHandler:
             array = " ".join(line[4:]).split("; ")
             array[0] = array[0].replace("[", "")
             array[-1] = array[-1].replace("]", "")
-            for i in xrange(0, len(array)):
+            for i in range(0, len(array)):
                 #check if in self.variables
                 #check if string
                 try:
@@ -183,7 +183,7 @@ class ScriptHandler:
         if "DESTROY" in line[0].upper():
             if "ALL" in line[1].upper():
                 self.variables = removekey(self.variables, line[1].lower())
-            if line[1] in self.variables.keys():
+            if line[1] in list(self.variables.keys()):
                 self.variables = removekey(self.variables, line[1])
                 if self.debug:
                     print("[WARNING] Removed variable %s" % line[1])
@@ -191,7 +191,7 @@ class ScriptHandler:
             if line[1] in self.safe_functions:
                 start = ""
                 end = ""
-                for i in xrange(0, len(line)):
+                for i in range(0, len(line)):
                     if "(" in line[i]:
                         start = i
                     if ")" in line[i]:
@@ -221,7 +221,7 @@ class ScriptHandler:
                     arguments[0] = arguments[0].replace("(", "")
                     arguments[-1] = arguments[-1].replace(")", "")
                     print(arguments)
-                    for i in xrange(0, len(arguments)):
+                    for i in range(0, len(arguments)):
                         try:
                             arguments[i] = self.variables[arguments[i]]
                             print(arguments[i])

@@ -1,6 +1,6 @@
 import pygame
-import tkSimpleDialog
-import Tkinter as Tk
+import tkinter.simpledialog as tkSimpleDialog
+import tkinter as Tk
 import os
 
 class MyDialog(tkSimpleDialog.Dialog):
@@ -33,8 +33,8 @@ def load_png(name):
             image = image.convert()
         else:
             image = image.convert_alpha()
-    except pygame.error, message:
-        print 'Cannot load image:', fullname
+    except pygame.error as message:
+        print('Cannot load image: %s' % fullname)
         raise SystemExit(message)
     return image, image.get_rect()
 
@@ -151,14 +151,14 @@ class Playfield():
         self.mapp = []
         self.npcmapp = []
         self.tileset = Tileset(tileset)
-        for y in xrange(h):
+        for y in range(int(h)):
             wline = []
-            for x in xrange(w):
+            for x in range(int(w)):
                 wline += [Tile()]
             self.mapp += [wline]
-        for y in xrange(h):
+        for y in range(int(h)):
             wline = []
-            for x in xrange(w):
+            for x in range(int(w)):
                 wline += [None]
             self.npcmapp += [wline]
         #pprint(self.mapp)
@@ -169,8 +169,8 @@ class Playfield():
         #ONLY FOR MAP.PY
         #DO NOT EVEN TRY TO USE IT IN GAME.PY
         #MEMORY INEFFICIENT
-        for y in xrange(len(self.mapp)):
-            for x in xrange(len(self.mapp[y])):
+        for y in range(len(self.mapp)):
+            for x in range(len(self.mapp[y])):
                 self.mapp[y][x].image = pygame.Surface((32, 32))
                 #print(self.mapp[y][x].pos_tileset_x, self.mapp[y][x].pos_tileset_y)
                 try:
@@ -304,8 +304,8 @@ class EQ:
     def recalculate_bonuses(self):
         self.bonuses = {}
         #print(self.equipped)
-        for i in self.equipped.keys():
-            for j in self.equipped[i].stats_d.keys():
+        for i in list(self.equipped.keys()):
+            for j in list(self.equipped[i].stats_d.keys()):
                 try:
                     self.bonuses[j] += self.equipped[i].stats_d[j]
                 except KeyError:
@@ -368,16 +368,16 @@ class Player_c:
         self.recalculate_stats()
 
     def zero_bonus_stats(self):
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].bonus_value = 0
 
     def recalculate_stats(self):
         self.zero_bonus_stats()
         self.EQ.recalculate_bonuses()
         #Change the way bonus stats are calculated
-        for i in self.EQ.bonuses.keys():
+        for i in list(self.EQ.bonuses.keys()):
             self.stats[i].bonus_value = self.EQ.bonuses[i]
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].recalculate()
         self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
         self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)
@@ -439,16 +439,16 @@ class NPC:
         self.recalculate_stats()
 
     def zero_bonus_stats(self):
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].bonus_value = 0
 
     def recalculate_stats(self):
         self.zero_bonus_stats()
         self.EQ.recalculate_bonuses()
         #Change the way bonus stats are calculated
-        for i in self.EQ.bonuses.keys():
+        for i in list(self.EQ.bonuses.keys()):
             self.stats[i].bonus_value = self.EQ.bonuses[i]
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].recalculate()
         self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
         self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)
@@ -503,16 +503,16 @@ class Mob:
         self.recalculate_stats()
 
     def zero_bonus_stats(self):
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].bonus_value = 0
 
     def recalculate_stats(self):
         self.zero_bonus_stats()
         self.EQ.recalculate_bonuses()
         #Change the way bonus stats are calculated
-        for i in self.EQ.bonuses.keys():
+        for i in list(self.EQ.bonuses.keys()):
             self.stats[i].bonus_value = self.EQ.bonuses[i]
-        for i in self.stats.keys():
+        for i in list(self.stats.keys()):
             self.stats[i].recalculate()
         self.stats["HP"].recalculate_with((1.5*self.stats["CON"].value+5)+((1.5*self.stats["STR"].value+5)/3))
         self.stats["MP"].recalculate_with(1.5*self.stats["WIS"].value+2)

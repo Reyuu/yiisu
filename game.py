@@ -1,7 +1,7 @@
 # coding=utf-8
 import pygame
 import xml.etree.cElementTree as ET
-import tkFileDialog
+import tkinter.filedialog as tkFileDialog
 import random
 import itertools
 from script_lang import *
@@ -25,8 +25,8 @@ class App:
         self.tilesetfile = "tileset.png"
         self.vx = 0
         self.vy = 0
-        self.vxmax = self.width/32
-        self.vymax = self.height/32
+        self.vxmax = int(self.width/32)
+        self.vymax = int(self.height/32)
         self.mapsize = (self.vxmax, self.vymax)
         self.camx = 0
         self.camy = 0
@@ -99,7 +99,7 @@ class App:
 
         def change_stat(entity, stat, value):
             if self.debug is True:
-                print(entity, stat, value)
+                print((entity, stat, value))
             entity.stats[stat].base_value = int(value)
             entity.recalculate_stats()
 
@@ -117,7 +117,7 @@ class App:
 
         def get_dict_from_lists(keys, values):
             magic_dict = {}
-            for i, j in itertools.izip(keys, values):
+            for i, j in zip(keys, values):
                 magic_dict.update({i: j})
             return magic_dict
 
@@ -181,7 +181,7 @@ class App:
             filename = filename
         try:
             e = ET.parse(filename).getroot()
-            print("[SUCCESS] Opened %s successfully!" % filename)
+            print(("[SUCCESS] Opened %s successfully!" % filename))
         except IOError:
             print("[ERROR] Couldn't read!")
             return None
@@ -224,14 +224,14 @@ class App:
             else:
                 self.Playfield.mapp[y][x].event = tile.find("event").text
             if self.debug:
-                print("[FOUND] Tile at %s, %s" % (x, y))
+                print(("[FOUND] Tile at %s, %s" % (x, y)))
         #self.Playfield.process_images()
-        print("[SUCCESS] Parsed %s successfully!" % filename)
+        print(("[SUCCESS] Parsed %s successfully!" % filename))
         try:
             self.Camera = Camera(self.vxmax, self.vymax, self.Playfield.maxx, self.Playfield.maxy, self.Player)
             self.Camera.calculate_pos()
-        except AttributeError, errcode:
-            print("[WARNING] Camera cannot initialize because instance of %s is not present" % errcode)
+        except AttributeError as errcode:
+            print(("[WARNING] Camera cannot initialize because instance of %s is not present" % errcode))
             print("          If you get this at the start of the app don't worry!")
         self.on_render()
         #print(filename)
@@ -256,7 +256,7 @@ class App:
                 self.ScriptHandler.parse_file()
             else:
                 if self.debug:
-                    print("[COLLISION] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side))
+                    print(("[COLLISION] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side)))
                 return True
 
     def collision_check_npc(self, offsetx, offsety):
@@ -282,7 +282,7 @@ class App:
                 return True
             else:
                 if self.debug:
-                    print("[NPC] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side))
+                    print(("[NPC] at %s, %s on %s side" % (self.Player.x+offsetx, self.Player.y+offsety, side)))
                 return True
 
     def on_event(self, event):
@@ -357,7 +357,7 @@ class App:
                             inputs = self.lastcommand[offset+1]
                             offset += 1
                             if self.debug:
-                                print(self.lastcommand)
+                                print((self.lastcommand))
                         except IndexError:
                             pass
                     if j.key == K_DOWN:
@@ -382,7 +382,7 @@ class App:
                             print("[ERROR] Syntax error")
                     elif j.key >= 32:
                         mods = pygame.key.get_mods()
-                        char = str(j.unicode)
+                        char = str(j.str)
                         inputs += char
                     if not(myvar):
                         break
@@ -390,8 +390,8 @@ class App:
             if len(inputs) > 0:
                 try:
                     self.Queue.levelthree += [Resource((self.font.render("".join(inputs), True, (255, 255, 255))), (0, 0))]
-                except pygame.error, err:
-                    print("%s" % err)
+                except pygame.error as err:
+                    print(("%s" % err))
             else:
                 pass
         self.Queue.pop_all()
@@ -399,7 +399,7 @@ class App:
     def check_stats(self):
         #TODO skills
         self.Player.recalculate_stats()
-        keys = self.Player.stats.keys()
+        keys = list(self.Player.stats.keys())
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
         self.Queue.leveltwo += [Resource(s)]
@@ -426,9 +426,9 @@ class App:
                                                                     True, (255, 255, 255)), (self.width/3.0, i*self.fontsize+50))]
                 stats_str = "%i+%i = %i" % (self.Player.stats[j].base_value, self.Player.stats[j].bonus_value, self.Player.stats[j].value)
                 stats_color = (89, 227, 209)
-                if i in xrange(0, 8):
+                if i in range(0, 8):
                     stats_color = (176, 227, 89)
-                if i in xrange(11, 17):
+                if i in range(11, 17):
                     stats_color = (140, 89, 227)
                 self.Queue.levelthree += [Resource(self.font.render(stats_str,
                                                                     True, stats_color), (self.width/1.5, i*self.fontsize+50))]
@@ -472,14 +472,14 @@ class App:
         def get_state_inventory():
             inventory_surf = pygame.Surface((self.width, self.fontsize*len(self.Player.EQ.backpack)+y_offset_cost+10), pygame.SRCALPHA)
             inventory_surf.fill((0, 0, 0, 0))
-            for i in xrange(offset, len(self.Player.EQ.backpack)):
+            for i in range(offset, len(self.Player.EQ.backpack)):
                 y_cord = (i*self.fontsize)-(self.fontsize*offset)
                 inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].name, True, (89, 227, 209)), (0, y_cord+y_offset_cost))
                 inventory_surf.blit(self.font.render(self.Player.EQ.backpack[i].equipable_where, True, (209, 227, 89)), (self.width/2.0, y_cord+y_offset_cost))
                 last_index = 0
-                if self.Player.EQ.backpack[i] in self.Player.EQ.equipped.values():
+                if self.Player.EQ.backpack[i] in list(self.Player.EQ.equipped.values()):
                     pygame.draw.rect(inventory_surf, (227, 209, 89), Rect(self.width-self.fontsize, y_cord+y_offset_cost, self.fontsize, self.fontsize))
-                for j in self.Player.EQ.backpack[i].stats_d.keys():
+                for j in list(self.Player.EQ.backpack[i].stats_d.keys()):
                     inventory_surf.blit(self.font.render("%s= %s" % (j, self.Player.EQ.backpack[i].stats_d[j]), True, (255, 255, 255)), (self.width/1.5+last_index*64, y_cord+y_offset_cost))
                     last_index += 1
             return inventory_surf
@@ -502,7 +502,7 @@ class App:
                            "rhand": (168, 60),
                            "legs": (112, 196),
                            "feet": (112, 217)}
-            for i in self.Player.EQ.equipped.keys():
+            for i in list(self.Player.EQ.equipped.keys()):
                 try:
                     if not(self.Player.EQ.equipped[i].name == "nothing"):
                         equipped.blit(self.font.render(self.Player.EQ.equipped[i].name, True, (255, 255, 255), (0, 0, 0)), positions_d[self.Player.EQ.equipped[i].equipable_where])
@@ -529,12 +529,12 @@ class App:
                     self.on_cleanup()
                 if j.type == pygame.KEYDOWN:
                     if j.key == K_DOWN:
-                        if offset+1 in xrange(0, len(self.Player.EQ.backpack)):
+                        if offset+1 in range(0, len(self.Player.EQ.backpack)):
                             offset += 1
                         if self.debug:
                             print(offset)
                     if j.key == K_UP:
-                        if offset-1 in xrange(0, len(self.Player.EQ.backpack)):
+                        if offset-1 in range(0, len(self.Player.EQ.backpack)):
                             offset -= 1
                         if self.debug:
                             print(offset)
@@ -557,13 +557,13 @@ class App:
 
     def choice_talk(self, lines, choice):
         if self.debug:
-            print(lines, choice)
+            print((lines, choice))
         s = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         s.fill((0, 0, 0, 200))
         #TODO use font instead of drawn triangle
         #TODO choices -> function that returns states of the chosen numbers
         self.Queue.leveltwo += [Resource(s)]
-        for i in xrange(len(lines)):
+        for i in range(len(lines)):
             self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
             myvar = True
             self.Queue.levelthree += [Resource(self.font.render("<", True, (0, 40, 255)), ((self.fontsize/2.3)*len(lines[i]), i*self.fontsize))]
@@ -579,7 +579,7 @@ class App:
                 if not(myvar):
                     break
             self.Queue.levelthree.pop()
-        for i in xrange(len(choice)):
+        for i in range(len(choice)):
             self.Queue.levelthree += [Resource(self.font.render(choice[i], True, (255, 125, 0)), (0, i*self.fontsize+len(lines)*self.fontsize))]
         myvar = True
         while myvar and self._running:
@@ -589,7 +589,7 @@ class App:
                     self.on_cleanup()
                 if j.type == pygame.KEYDOWN:
                     for number, mkey in list(enumerate([K_1, K_2, K_3, K_4, K_5])):
-                        if (j.key == mkey) and (number in xrange(len(choice))):
+                        if (j.key == mkey) and (number in range(len(choice))):
                             self.Queue.pop_all()
                             return number
             if not(myvar):
@@ -604,7 +604,7 @@ class App:
         #TODO use font instead of drawn triangle
         #TODO choices -> function that returns states of the chosen numbers
         self.Queue.leveltwo += [Resource(s)]
-        for i in xrange(len(lines)):
+        for i in range(len(lines)):
             self.Queue.levelthree += [Resource(self.font.render(lines[i], True, (255, 255, 255)), (0, i*self.fontsize))]
             myvar = True
             self.Queue.levelthree += [Resource(self.font.render("<", True, (0, 40, 255)), ((self.fontsize/2.3)*len(lines[i]), i*self.fontsize))]
@@ -632,15 +632,15 @@ class App:
             self._display_surf.fill((0, 0, 0))
             tileset = self.Playfield.tileset.image
             if self.Camera.worldsizey < self.Camera.viewportmaxy:
-                rangey = xrange(len(self.Playfield.mapp))
+                rangey = list(range(len(self.Playfield.mapp)))
             else:
-                rangey = xrange(self.Camera.y, (self.Camera.viewportmaxy+self.Camera.y))
+                rangey = list(range(int(self.Camera.y), int(self.Camera.viewportmaxy+self.Camera.y)))
 
             for y in rangey:
                 if self.Camera.worldsizex < self.Camera.viewportmaxx:
-                    rangex = xrange(len(self.Playfield.mapp[y]))
+                    rangex = list(range(len(self.Playfield.mapp[y])))
                 else:
-                    rangex = xrange(self.Camera.x, (self.Camera.viewportmaxx+self.Camera.x))
+                    rangex = list(range(int(self.Camera.x), int(self.Camera.viewportmaxx+self.Camera.x)))
 
                 for x in rangex:
                     pos_x = self.Playfield.mapp[y][x].pos_tileset_x
