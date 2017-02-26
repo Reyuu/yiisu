@@ -1,8 +1,8 @@
 # yiisu
 Almost nothing here but try to check out my simple script lang.
 
-- map.py to mapEditor
-- game.py to mapPlayer
+- map.py - mapEditor
+- game.py - mapPlayer
 
 ##Currenly working on
 - Fighting
@@ -32,6 +32,24 @@ Almost nothing here but try to check out my simple script lang.
 |SHIFT+MOUSE WHEEL DOWN|Scrolls horizontally down (only map screen)|
 
 ##Controls - game.py
-Soon™
+|Key|Action|
+|---|------|
+|UP|Move up|
+|DOWN|Move down|
+|LEFT|Move left|
+|RIGHT|Move right|
+|F1|Game debug console|
+|C|Character sheet|
+|I|Inventory and equip menu|
+|ENTER|Accept/Confirm|
+
+###Controls - debuging console 
+|Key|Action|
+|---|------|
+|UP|Seek command up (+1)|
+|DOWN|Seek command down (-1)|
+|BACKSPACE|Delete character|
+|ENTER|Execute command|
+
 ##Mapping and scripting tutorials
 Soon™
