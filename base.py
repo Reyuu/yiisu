@@ -3,6 +3,60 @@ import tkinter.simpledialog as tkSimpleDialog
 import tkinter as Tk
 import os
 
+class MyTextDialog(tkSimpleDialog.Dialog):
+    def __init__(self, parent, e, title=None):
+        Tk.Toplevel.__init__(self, parent)
+        self.my_text = e
+        self.edited_text = ""
+        self.withdraw() # remain invisible for now
+        # If the master is not viewable, don't
+        # make the child transient, or else it
+        # would be opened withdrawn
+        if parent.winfo_viewable():
+            self.transient(parent)
+
+        if title:
+            self.title(title)
+
+        self.parent = parent
+
+        self.result = None
+
+        body = Tk.Frame(self)
+        self.initial_focus = self.body(body)
+        body.pack(padx=5, pady=5)
+
+        self.buttonbox()
+
+
+        if not self.initial_focus:
+            self.initial_focus = self
+
+        self.protocol("WM_DELETE_WINDOW", self.cancel)
+
+        if self.parent is not None:
+            self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
+                                      parent.winfo_rooty()+50))
+
+        self.deiconify() # become visibile now
+
+        self.initial_focus.focus_set()
+
+        # wait for window to appear on screen before calling grab_set
+        self.wait_visibility()
+        self.grab_set()
+        self.wait_window(self)
+        
+    def body(self, master):
+       self.edit_dialog = Tk.Text(master, width=80, height=24)
+       self.edit_dialog.insert(Tk.constants.END, self.my_text)
+       self.edit_dialog.grid(row=0)
+       print(self.edit_dialog.get(1.0 , Tk.constants.END))
+       return self.edit_dialog
+   
+    def apply(self):
+        self.edited_text = self.edit_dialog.get(1.0, Tk.constants.END)
+
 class MyDialog(tkSimpleDialog.Dialog):
     def body(self, master):
         Tk.Label(master, text="width").grid(row=0)

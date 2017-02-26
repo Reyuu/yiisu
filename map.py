@@ -6,9 +6,16 @@ import xml.etree.cElementTree as ET
 import tkinter as Tk
 import tkinter.filedialog
 import tkinter.simpledialog
+import tkinter.scrolledtext
+import tkinter.constants
+import random
 from pygame.locals import *
 from array import array
 from base import *
+
+#TODO Load map scripts
+#TODO Edit map scripts 
+#TOOD Edit scripts of the tiles inside editor -> find coordinates, get file contents of that tilescript, open new tk text edit instance
 
 class App:
     def __init__(self):
@@ -25,12 +32,23 @@ class App:
         self.mapsize = (self.vxmax, self.vymax)
         self.player_x = 7
         self.player_y = 7
+        self.map_script = ""
 
     def on_init(self):
         pygame.init()
-        pygame.mixer.init()
+        pygame.mixer.init(frequency=44100)
         pygame.display.set_caption('mapEditor')
         self.switchsound = pygame.mixer.Sound("switch.wav")
+        self.beep = pygame.mixer.Sound("beep2")
+        self.boop = pygame.mixer.Sound("boop1")
+        self.nop = pygame.mixer.Sound("nop")
+        self.placeop = pygame.mixer.Sound("placeop")
+        self.placeop2 = pygame.mixer.Sound("placeop2")
+        self.placeop3 = pygame.mixer.Sound("placeop3")
+        self.placeops = [self.placeop, self.placeop2, self.placeop3]
+        self.switchsound.set_volume(0.5)
+        for i in range(len(self.placeops)):
+            self.placeops[i].set_volume(0.05)
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
         pygame.display.set_icon(pygame.Surface((32,32), pygame.SRCALPHA, 32).convert_alpha())
         self._running = True
@@ -62,15 +80,36 @@ class App:
     def add_event(self):
         x, y = pygame.mouse.get_pos()
         try:
-            filename = tkinter.filedialog.askopenfilename(defaultextension='.script', filetypes=[('supported', ('*.script'))], initialdir="./")
+            filename = tkinter.filedialog.asksaveasfilename(defaultextension='.script', filetypes=[('supported', ('*.script'))], initialdir="./")
+            with open(filename, "w") as f:
+                f.write("")
             filename = os.path.relpath(filename)
         except ValueError:
             return False
-        nx = (x - (x % 32) -  self.vx) / 32
-        ny = (y - (y % 32) - self.vy) / 32
+        nx = int((x - (x % 32) -  self.vx) / 32)
+        ny = int((y - (y % 32) - self.vy) / 32)
         print(nx, ny)
         self.Playfield.mapp[ny][nx].event = filename
         print("[EVENT] Setup %s at %i, %i" % (filename, nx, ny))
+
+def edit_event(self):
+        """
+        check if tile has event 
+        if not pass
+        else edit 
+        """
+        x, y = pygame.mouse.get_pos()
+        nx = int((x - (x % 32) -  self.vx) / 32)
+        ny = int((y - (y % 32) - self.vy) / 32)
+        print(nx, ny)
+        if len(self.Playfield.mapp[ny][nx].event) > 1:
+            text_edit = None
+            with open(self.Playfield.mapp[ny][nx].event, "r") as f:
+                text_edit = MyTextDialog(self.root, f.read(), title="Script at %s, %s" % (nx, ny))
+            my_script = text_edit.edited_text
+            with open(self.Playfield.mapp[ny][nx].event, "w") as f:
+                f.write(my_script)
+
 
     def save(self):
         #2015-07-30
@@ -117,8 +156,12 @@ class App:
         tree = ET.ElementTree(mapp)
         try:
             tree.write(filename)
+            with open("%s.script" % filename[:-4], "w") as f:
+                print(len(self.map_script))
+                f.write(self.map_script)
             print("[SUCCESS] Wrote to %s successfully!" % filename)
         except:
+            self.nop.play()
             print("[ERROR] Couldn't write!")
 
     def open(self):
@@ -127,13 +170,14 @@ class App:
             e = ET.parse(filename).getroot()
             print("[SUCCESS] Opened %s successfully!" % filename)
         except:
+            self.nop.play()
             print("[ERROR] Couldn't open!")
             return None
         playfield = []
         mapp = []
         tileset = e.find("tileset").text
         #print(tileset)
-        w, h = int(e.find("size").find("x").text), int(e.find("size").find("y").text)
+        w, h = int(float(e.find("size").find("x").text)), int(float(e.find("size").find("y").text))
         self.Playfield = Playfield(w, h, tileset)
         counter = 0
         countermax = w * h
@@ -166,6 +210,13 @@ class App:
         #self.Playfield.process_images()
         self.vx = 0
         self.vy = 0
+        print(filename)
+        with open("%s.script" % filename[:-4], "r") as f:
+            try:
+                self.map_script = f.read()
+                print("[SUCCESS] Loaded map scirpt successfully!")
+            except:
+                print("[ERROR] Couldn't load map script at %s" % filename)
         print("[SUCCESS] Parsed %s successfully!" % filename)
 
  
@@ -209,18 +260,29 @@ class App:
                 if event.key == K_RIGHT:
                     self.vx -= 32
                     print(self.vx)
+                if event.key == K_l:
+                    self.edit_event()
+                if event.key == K_p:
+                    print("Text dialog subroutine")
+                    text_edit = MyTextDialog(self.root, self.map_script, title="Map script")
+                    self.map_script = text_edit.edited_text
                 if event.key == K_r:
+                    self.boop.play()
                     if self.SelectedTile.collision:
                         self.SelectedTile.collision = False
                     elif not self.SelectedTile.collision:
                         self.SelectedTile.collision = True
                 if event.key == K_s and pygame.key.get_mods() & KMOD_LCTRL:
+                    self.beep.play()
                     self.save()
                 if event.key == K_o and pygame.key.get_mods() & KMOD_LCTRL:
+                    self.beep.play()
                     self.open()
                 if event.key == K_n and pygame.key.get_mods() & KMOD_LCTRL:
+                    self.beep.play()
                     self.new()
                 if event.key == K_e and pygame.key.get_mods() & KMOD_LCTRL:
+                    self.beep.play()
                     self.add_event()
         if self.tileset_screen:
             if pygame.mouse.get_pressed()[0]:
@@ -234,14 +296,17 @@ class App:
                     self.SelectedTile.image.fill((255, 255, 255))
                     self.SelectedTile.image.blit(self.Tileset.image, (0, 0), (nx, ny, 32, 32))
                     self.SelectedTile.select_tile(nx, ny)
+                    self.boop.play()
                     print("Clicked on tileset")
             if event.type == MOUSEBUTTONDOWN:
                 if event.button == 4:
                     self.Tileset.change_pos_rel(0, 32)
                     self.offset += 32
+                    random.choice(self.placeops).play()
                 if event.button == 5:
                     self.Tileset.change_pos_rel(0, -32)
                     self.offset += -32
+                    random.choice(self.placeops).play()
 
         if not self.tileset_screen:
             if pygame.mouse.get_pressed()[0]:
@@ -256,6 +321,7 @@ class App:
                 try:
                     self.SelectedTile.mutate(self.Playfield.mapp[int(ny/32)][int(nx/32)])
                     print(self.SelectedTile.collision)
+                    random.choice(self.placeops).play()
                 except IndexError:
                     pass
             if pygame.mouse.get_pressed()[2]:
@@ -268,7 +334,8 @@ class App:
                 print("Formatted: %i, %i" % (nx, ny))
                 try:
                     self.SelectedTile = SelectedTile(self.SelectedTile.pos_x, self.SelectedTile.pos_y)
-                    self.SelectedTile.mutate(self.Playfield.mapp[ny/32][nx/32])
+                    self.SelectedTile.mutate(self.Playfield.mapp[int(ny/32)][int(nx/32)])
+                    random.choice(self.placeops).play()
                 except IndexError:
                     pass
             if event.type == MOUSEBUTTONDOWN:
@@ -307,6 +374,14 @@ class App:
                         pygame.draw.rect(self._display_surf,
                                          (255, 0, 0),
                                          Rect(32*x + self.vx, 32*y + self.vy, 32, 32),
+                                         2)
+                    if self.Playfield.mapp[y][x].event:
+                        s = pygame.Surface((32, 32), pygame.SRCALPHA)
+                        s.fill((255, 0, 0, 100))
+                        self._display_surf.blit(s, (32*x + self.vx, 32*y + self.vy))
+                        pygame.draw.rect(self._display_surf,
+                                         (125, 0, 125),
+                                         Rect(32*x + self.vx, 32*y + self.vy, 8, 8),
                                          2)
 
             self._display_surf.blit(self.SelectedTile.image, (self.SelectedTile.pos_x, self.SelectedTile.pos_y))
