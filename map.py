@@ -92,7 +92,7 @@ class App:
         self.Playfield.mapp[ny][nx].event = filename
         print("[EVENT] Setup %s at %i, %i" % (filename, nx, ny))
 
-def edit_event(self):
+    def edit_event(self):
         """
         check if tile has event 
         if not pass
@@ -109,7 +109,6 @@ def edit_event(self):
             my_script = text_edit.edited_text
             with open(self.Playfield.mapp[ny][nx].event, "w") as f:
                 f.write(my_script)
-
 
     def save(self):
         #2015-07-30

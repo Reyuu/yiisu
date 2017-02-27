@@ -36,7 +36,7 @@ class App:
 
     def on_init(self):
         pygame.init()
-        pygame.mixer.init()
+        pygame.mixer.init(frequency=44100)
         pygame.font.init()
         pygame.display.set_caption('mapPlayer')
         self.fontsize = int((((self.width*self.height*16**2)/(640*480)))**(1/2.0))
@@ -189,7 +189,7 @@ class App:
         mapp = []
         tileset = e.find("tileset").text
         #print(tileset)
-        w, h = int(e.find("size").find("x").text), int(e.find("size").find("y").text)
+        w, h = int(float(e.find("size").find("x").text)), int(float(e.find("size").find("y").text))
         self.Playfield = Playfield(w, h, tileset)
         counter = 0
         countermax = w * h
